@@ -106,6 +106,7 @@
 
 struct wiphy;
 
+#define CFG80211_SCAN_RANDOM_MAC_ADDR 1
 /*
  * wireless hardware capability structures
  */
