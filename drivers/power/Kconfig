@@ -1,3 +1,8 @@
+config USB_TEMP_PROTECT
+	bool "To switch charging by usb temperature"
+	help
+	 Say Y here if we want to use this function
+
 source "drivers/power/avs/Kconfig"
 source "drivers/power/reset/Kconfig"
 source "drivers/power/supply/Kconfig"
