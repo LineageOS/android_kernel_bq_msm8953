@@ -1,26 +1,51 @@
 /************************************************************************
- * Copyright (C) 2010-2017, Focaltech Systems (R)£¬All Rights Reserved.
- *
- * File Name: focaltech_flash.h
- *
- *    Author: fupeipei
- *
- *   Created: 2016-08-07
- *
- *  Abstract:
- *
- ************************************************************************/
+* Copyright (C) 2012-2016, Focaltech Systems (R)ï¿½ï¿½All Rights Reserved.
+*
+* File Name: focaltech_flash.h
+*
+*    Author: fupeipei
+*
+*   Created: 2016-08-07
+*
+*  Abstract:
+*
+************************************************************************/
 #ifndef __LINUX_FOCALTECH_FLASH_H__
 #define __LINUX_FOCALTECH_FLASH_H__
 
 /*****************************************************************************
- * 1.Included header files
- *****************************************************************************/
+* 1.Included header files
+*****************************************************************************/
 #include "focaltech_flash/focaltech_upgrade_common.h"
 
 /*****************************************************************************
- * Private constant and macro definitions using #define
- *****************************************************************************/
+* Private constant and macro definitions using #define
+*****************************************************************************/
+#define FTS_MAX_TRIES                                5
+#define FTS_RETRY_DLY                                20
+#define FTS_MAX_WR_BUF                               10
+#define FTS_MAX_RD_BUF                               2
+#define FTS_FW_PKT_META_LEN                          6
+#define FTS_FW_PKT_DLY_MS                            20
+#define FTS_FW_LAST_PKT                              0x6ffa
+#define FTS_EARSE_DLY_MS                             100
+#define FTS_55_AA_DLY_NS                             5000
+#define FTS_CAL_START                                0x04
+#define FTS_CAL_FIN                                  0x00
+#define FTS_CAL_STORE                                0x05
+#define FTS_CAL_RETRY                                100
+#define FTS_REG_CAL                                  0x00
+#define FTS_CAL_MASK                                 0x70
+#define FTS_BLOADER_SIZE_OFF                         12
+#define FTS_BLOADER_NEW_SIZE                         30
+#define FTS_DATA_LEN_OFF_OLD_FW                      8
+#define FTS_DATA_LEN_OFF_NEW_FW                      14
+#define FTS_FINISHING_PKT_LEN_OLD_FW                 6
+#define FTS_FINISHING_PKT_LEN_NEW_FW                 12
+#define FTS_MAGIC_BLOADER_Z7                         0x7bfa
+#define FTS_MAGIC_BLOADER_LZ4                        0x6ffa
+#define FTS_MAGIC_BLOADER_GZF_30                     0x7ff4
+#define FTS_MAGIC_BLOADER_GZF                        0x7bf4
 #define FTS_REG_ECC                                  0xCC
 #define FTS_RST_CMD_REG2                             0xBC
 #define FTS_READ_ID_REG                              0x90
@@ -31,85 +56,72 @@
 #define FTS_RST_CMD_REG1                             0xFC
 #define LEN_FLASH_ECC_MAX                            0xFFFE
 
+#define BL_VERSION_LZ4                               0
+#define BL_VERSION_Z7                                1
+#define BL_VERSION_GZF                               2
+
 #define FTS_PACKET_LENGTH                            128
 #define FTS_SETTING_BUF_LEN                          128
 
 #define FTS_UPGRADE_LOOP                             30
+#define FTS_MAX_POINTS_2                             2
+#define FTS_MAX_POINTS_5                             5
+#define FTS_MAX_POINTS_10                            10
 #define AUTO_CLB_NEED                                1
 #define AUTO_CLB_NONEED                              0
 #define FTS_UPGRADE_AA                               0xAA
 #define FTS_UPGRADE_55                               0x55
 #define FTXXXX_INI_FILEPATH_CONFIG                   "/sdcard/"
 
-enum FW_STATUS {
-	FTS_RUN_IN_ERROR,
-	FTS_RUN_IN_APP,
-	FTS_RUN_IN_ROM,
-	FTS_RUN_IN_PRAM,
-	FTS_RUN_IN_BOOTLOADER
+enum FW_STATUS
+{
+    FTS_RUN_IN_ERROR,
+    FTS_RUN_IN_APP,
+    FTS_RUN_IN_ROM,
+    FTS_RUN_IN_PRAM,
+    FTS_RUN_IN_BOOTLOADER
 };
 
-enum FILE_SIZE_TYPE {
-	FW_SIZE,
-	FW2_SIZE,
-	FW3_SIZE,
-	PRAMBOOT_SIZE,
-	LCD_CFG_SIZE
+enum FILE_SIZE_TYPE
+{
+    FW_SIZE,
+    PRAMBOOT_SIZE,
+    LCD_CFG_SIZE
 };
 
-/* pramboot */
+/* pramboot for 8716 */
 #define FTS_PRAMBOOT_8716   "include/pramboot/FT8716_Pramboot_V0.5_20160723.i"
-#define FTS_PRAMBOOT_E716   "include/pramboot/FT8716_Pramboot_V0.5_20160723.i"
-#define FTS_PRAMBOOT_8736   "include/pramboot/FT8736_Pramboot_V0.4_20160627.i"
-#define FTS_PRAMBOOT_8607   "include/pramboot/FT8607_Pramboot_V0.3_20160727.i"
-#define FTS_PRAMBOOT_8606   "include/pramboot/FT8606_Pramboot_V0.7_20150507.i"
-
-/* ic types */
-#if (FTS_CHIP_TYPE == _FT8716)
 #define FTS_UPGRADE_PRAMBOOT    FTS_PRAMBOOT_8716
-#elif (FTS_CHIP_TYPE == _FTE716)
-#define FTS_UPGRADE_PRAMBOOT    FTS_PRAMBOOT_E716
-#elif (FTS_CHIP_TYPE == _FT8736)
-#define FTS_UPGRADE_PRAMBOOT    FTS_PRAMBOOT_8736
-#elif (FTS_CHIP_TYPE == _FT8607)
-#define FTS_UPGRADE_PRAMBOOT    FTS_PRAMBOOT_8607
-#elif (FTS_CHIP_TYPE == _FT8606)
-#define FTS_UPGRADE_PRAMBOOT    FTS_PRAMBOOT_8606
-#endif
 
-/* remove pramboot */
-#undef FTS_UPGRADE_PRAMBOOT
+
 
 /*****************************************************************************
- * Private enumerations, structures and unions using typedef
- *****************************************************************************/
+* Private enumerations, structures and unions using typedef
+*****************************************************************************/
 /* IC info */
 
-struct fts_upgrade_fun {
-	int (*get_i_file)(struct i2c_client *, int);
-	int (*get_app_bin_file_ver)(struct i2c_client *, char *);
-	int (*get_app_i_file_ver)(void);
-	int (*upgrade_with_app_i_file)(struct i2c_client *);
-	int (*upgrade_with_app_bin_file)(struct i2c_client *, char *);
-	int (*upgrade_with_lcd_cfg_i_file)(struct i2c_client *);
-	int (*upgrade_with_lcd_cfg_bin_file)(struct i2c_client *, char *);
+struct fts_upgrade_fun
+{
+    int (*get_app_bin_file_ver)(char *);
+    int (*get_app_i_file_ver)(void);
+    int (*upgrade_with_app_i_file)(struct i2c_client *);
+    int (*upgrade_with_app_bin_file)(struct i2c_client *, char *);
+    int (*upgrade_with_lcd_cfg_i_file)(struct i2c_client *);
+    int (*upgrade_with_lcd_cfg_bin_file)(struct i2c_client *, char *);
 };
 extern struct fts_upgrade_fun fts_updatefun;
 
 /*****************************************************************************
- * Static variables
- *****************************************************************************/
+* Static variables
+*****************************************************************************/
 
 /*****************************************************************************
- * Global variable or extern global variabls/functions
- *****************************************************************************/
-extern u8 CTPM_FW[];
-extern u8 CTPM_FW2[];
-extern u8 CTPM_FW3[];
-extern u8 aucFW_PRAM_BOOT[];
-extern u8 CTPM_LCD_CFG[];
-extern u8 *g_fw_file;
-extern int g_fw_len;
+* Global variable or extern global variabls/functions
+*****************************************************************************/
+extern unsigned char CTPM_FW[];
+extern unsigned char aucFW_PRAM_BOOT[];
+extern unsigned char CTPM_LCD_CFG[];
+
 extern struct fts_upgrade_fun  fts_updatefun_curr;
 extern struct ft_chip_t chip_types;
 
@@ -127,10 +139,12 @@ int fts_fw_upgrade(struct device *dev, bool force);
 int fts_ctpm_auto_clb(struct i2c_client *client);
 
 /*****************************************************************************
- * Static function prototypes
- *****************************************************************************/
+* Static function prototypes
+*****************************************************************************/
 u32 fts_getsize(u8 fw_type);
+int fts_GetFirmwareSize(char *firmware_name);
 int fts_ctpm_i2c_hid2std(struct i2c_client *client);
+int fts_ReadFirmware(char *firmware_name,unsigned char *firmware_buf);
 void fts_ctpm_rom_or_pram_reset(struct i2c_client *client);
 enum FW_STATUS fts_ctpm_get_pram_or_rom_id(struct i2c_client *client);
 #endif
