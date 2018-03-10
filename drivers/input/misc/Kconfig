@@ -873,6 +873,12 @@ config INPUT_DRV2667_HAPTICS
 	depends on INPUT && I2C
 	select INPUT_FF_MEMLESS
 	select REGMAP_I2C
+
+config HALL
+	tristate "HALL Switch"
+	help
+	 If you say yes here, you get support for hall switch control device
+
 	help
 	  Say Y to enable support for the TI DRV2667 haptics driver.
 
