@@ -2,7 +2,7 @@
  *
  * FocalTech TouchScreen driver.
  *
- * Copyright (c) 2010-2017, FocalTech Systems, Ltd., all rights reserved.
+ * Copyright (c) 2010-2016, FocalTech Systems, Ltd., all rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -15,18 +15,18 @@
  *
  */
 /************************************************************************
- *
- * File Name: focaltech_config.h
- *
- *    Author: Focaltech Driver Team
- *
- *   Created: 2016-08-08
- *
- *  Abstract: global configurations
- *
- *   Version: v1.0
- *
- ************************************************************************/
+*
+* File Name: focaltech_config.h
+*
+*    Author: Focaltech Driver Team
+*
+*   Created: 2016-08-08
+*
+*  Abstract: global configurations
+*
+*   Version: v1.0
+*
+************************************************************************/
 #ifndef _LINUX_FOCLATECH_CONFIG_H_
 #define _LINUX_FOCLATECH_CONFIG_H_
 
@@ -85,7 +85,7 @@
 /*
  * choose your ic chip type of focaltech
  */
-#define FTS_CHIP_TYPE   _FT3267
+#define FTS_CHIP_TYPE   _FT8716
 
 /******************* Enables *********************/
 /*********** 1 to enable, 0 to disable ***********/
@@ -106,8 +106,8 @@
 /*
  * Report Pressure in multitouch
  * 1:enable(default),0:disable
- */
-#define FTS_REPORT_PRESSURE_EN                  1
+*/
+#define FTS_REPORT_PRESSURE_EN                  0
 
 /*
  * Force touch support
@@ -115,7 +115,7 @@
  * 1: true pressure for force touch
  * 0: constant pressure(default)
  */
-#define FTS_FORCE_TOUCH_EN                      0
+#define FTS_FORCE_TOUCH_EN                      1
 
 /*
  * Gesture function enable
@@ -133,7 +133,7 @@
  * Production test enable
  * 1: enable, 0:disable(default)
  */
-#define FTS_TEST_EN                             0
+#define FTS_TEST_EN                             1
 
 /*
  * Glove mode enable
@@ -168,7 +168,7 @@
  * enable it when customer need control TP power
  * default: disable
  */
-#define FTS_POWER_SOURCE_CUST_EN                1
+#define FTS_POWER_SOURCE_CUST_EN                0
 
 /****************************************************/
 
@@ -190,59 +190,47 @@
 #define FTS_AUTO_CLB_EN                         0
 
 /*
- * Check vendor_id number
- * 0:No check vendor_id (default)
- * 1/2/3: Check vendor_id for vendor compatibility
- */
-#define FTS_GET_VENDOR_ID_NUM                   0
-
-/*
- * vendor_id(s) for vendor(s) to be compatible with.
- * a confirmation of vendor_id(s) is recommended.
- * FTS_GET_VENDOR_ID_NUM == 0, no check vendor id, you may ignore them
- * FTS_GET_VENDOR_ID_NUM >= 1, compatible with FTS_VENDOR_1_ID
- * FTS_GET_VENDOR_ID_NUM >= 2, compatible with FTS_VENDOR_2_ID
- * FTS_GET_VENDOR_ID_NUM == 3, compatible with FTS_VENDOR_3_ID
- */
-#define FTS_VENDOR_1_ID                         0x00
-#define FTS_VENDOR_2_ID                         0x00
-#define FTS_VENDOR_3_ID                         0x00
-
-/*
- * FW_APP.i file for auto upgrade, you must replace it with your own
- * define your own fw_app, the sample one to be replaced is invalid
- * NOTE: if FTS_GET_VENDOR_ID_NUM >= 1,
- *       it's the fw corresponding with FTS_VENDOR_1_ID
- */
-#define FTS_UPGRADE_FW_APP		"include/firmware/FT8716_app_sample.i"
-
-/*
- * if FTS_GET_VENDOR_ID_NUM >= 2, fw corrsponding with FTS_VENDOR_2_ID
+ * FW_APP.i file for upgrade
  * define your own fw_app, the sample one is invalid
  */
-#define FTS_UPGRADE_FW2_APP		"include/firmware/FT8716_app_sample.i"
-
-/*
- * if FTS_GET_VENDOR_ID_NUM == 3, fw corrsponding with FTS_VENDOR_3_ID
- * define your own fw_app, the sample one is invalid
- */
-#define FTS_UPGRADE_FW3_APP		"include/firmware/FT8716_app_sample.i"
+#define FTS_UPGRADE_FW_APP                      "include/firmware/Focaltect_FW.i"
 
 /*
  * lcd_cfg.i file for lcd cfg upgrade
  * define your own lcd_cfg.i, the sample one is invalid
  */
-#define FTS_UPGRADE_LCD_CFG		"include/firmware/lcd_cfg.i"
+//Note: Not used! Please Ignore it!
+//#define FTS_UPGRADE_LCD_CFG                     "include/firmware/lcd_cfg.i"
 
 /*
- * upgrade stress test for debug
+ * vendor_id(s) for the ic
+ * you need confirm vendor_id for upgrade
+ * if only one vendor, ignore vendor_2_id, otherwise
+ * you need define both of them
+ */
+#define FTS_VENDOR_1_ID                         0x8d
+#define FTS_VENDOR_2_ID                         0x8d
+
+/* show upgrade time in log
+ * default: disable
+ */
+#define FTS_GET_UPGRADE_TIME                    0
+
+/* get vedor id from flash
+ * default: enable
+ */
+#define FTS_GET_VENDOR_ID                       0
+
+/*
+ * upgrade ping-pong test for debug
  * enable it for upgrade debug if needed
  * default: disable
  */
-#define FTS_UPGRADE_STRESS_TEST                 0
-/* stress test times, default: 1000 */
+#define FTS_UPGRADE_PINGPONG_TEST               0
+/* pingpong or error test times, default: 1000 */
 #define FTS_UPGRADE_TEST_NUMBER                 1000
 
 /*********************************************************/
 
 #endif /* _LINUX_FOCLATECH_CONFIG_H_ */
+
