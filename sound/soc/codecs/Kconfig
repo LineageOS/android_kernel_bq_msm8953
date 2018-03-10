@@ -1096,4 +1096,13 @@ config SND_SOC_AW8896
 	help
 	  Enables support for aw8896 series Smart PA.
 
+
+config SND_SOC_TFA9896
+	tristate "Support TFA9896"
+	depends on I2C
+	help
+	TFA9896 driver
+
+config SND_SOC_ESS9118	
+	tristate
 endmenu
