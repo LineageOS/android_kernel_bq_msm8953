@@ -879,6 +879,21 @@ config HALL
 	help
 	 If you say yes here, you get support for hall switch control device
 
+config FINGERPRINT_GOODIX_GF3208
+	tristate "Goodix GFX18M fingerprint driver support"
+	help
+	  Say Y here to enable goodix fingerprint driver support
+
+config FINGERPRINT_CS_FINGER
+	tristate "CS_FINGER fingerprint driver support"
+	help
+	  Say Y here to enable CS_FINGER fingerprint driver support
+
+config FINGERPRINT_SUNWAVE_FINGER
+	tristate "SUNWAVE_FINGER fingerprint driver support"
+	help
+	  Say Y here to enable SUNWAVE_FINGER fingerprint driver support
+
 	help
 	  Say Y to enable support for the TI DRV2667 haptics driver.
 
