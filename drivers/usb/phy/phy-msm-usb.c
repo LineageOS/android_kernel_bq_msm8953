@@ -2862,6 +2862,8 @@ static void msm_otg_sm_work(struct work_struct *w)
 				msm_otg_dbg_log_event(phy,
 					"SM WORK: Gadget Not Set",
 					otg->state, motg->inputs);
+					msm_otg_notify_charger(motg,
+							IDEV_CHG_MAX);
 				break;
 			}
 
