@@ -81,6 +81,7 @@ struct msm_asoc_mach_data {
 	void __iomem *vaddr_gpio_mux_mic_ctl;
 	void __iomem *vaddr_gpio_mux_quin_ctl;
 	void __iomem *vaddr_gpio_mux_pcm_ctl;
+	void __iomem *vaddr_gpio_mux_mic_ext_clk_ctl;
 	struct on_demand_supply wsa_switch_supply;
 	struct device_node *spk_ext_pa_gpio_p;
 	struct device_node *us_euro_gpio_p;
