@@ -2138,13 +2138,11 @@ static int qpnp_pwm_probe(struct platform_device *pdev)
 {
 	struct qpnp_pwm_chip	*pwm_chip;
 	int			rc;
-	int			gpio_127,gpio_128;
-
-	gpio_127 = gpio_get_value(127);
-	gpio_128 = gpio_get_value(128);
-	if((0 != gpio_127)&&(1 != gpio_128))
-	return 0;
-
+#ifdef CONFIG_MSM8953_PRODUCT
+#define IS_BARDOCK_BEFORE_DVT2() ((gpio_get_value(127) == 0) && (gpio_get_value(128) == 1))
+	if (!IS_BARDOCK_BEFORE_DVT2())
+		return 0;
+#endif
 	pwm_chip = kzalloc(sizeof(*pwm_chip), GFP_KERNEL);
 	if (pwm_chip == NULL)
 		return -ENOMEM;
