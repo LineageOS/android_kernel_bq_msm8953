@@ -25,7 +25,7 @@
  */
  
 #define PN547_MAGIC	0xE9
-#define PN547_SET_PWR	_IOW(PN547_MAGIC, 0x01, long)
+#define PN547_SET_PWR	_IOW(PN547_MAGIC, 0x01, unsigned int)
 
 
 #define PN547_NAME "pn544"
