@@ -467,20 +467,6 @@
 		status = "okay";
 	};
 
-	goodix_gf3208 {
-		compatible = "goodix,fingerprint";
-		interrupt-parent = <&tlmm>;
-		interrupts = <48 0x0>;
-
-		vcc_spi-supply  = <&pm8953_l6>;
-		vdd_ana-supply  = <&pm8953_l6>;
-		vdd_io-supply   = <&pm8953_l6>;
-
-		fp-gpio-reset = <&tlmm 140 0>;
-		fp-gpio-irq = <&tlmm 48 0>;
-		goodix,gpio_pwr = <&tlmm 35 0>;
-	};
-
 	SUNWAVE_sw9651 {
 		compatible = "qcom,fingerprint";
 		interrupt-parent = <&tlmm>;
