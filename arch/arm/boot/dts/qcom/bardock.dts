@@ -637,7 +637,7 @@
 	qcom,wave-play-rate-us = <4255>;
 	qcom,actuator-type = "lra";
 	qcom,wave-shape = "sine";
-	qcom,vmax-mv = <2000>;
+	qcom,vmax-mv = <1000>;
 	qcom,ilim-ma = <90>;
 	qcom,sc-deb-cycles = <1>;
 	qcom,int-pwm-freq-khz = <505>;
