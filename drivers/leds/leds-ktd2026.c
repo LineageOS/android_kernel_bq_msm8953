@@ -24,7 +24,7 @@
 #include <linux/of.h>
 
 
-#define debug 1
+#define debug 0
 #define KTD_REG_RSTR		0x00
 #define KTD_REG_LEDE		0x04
 #define KTD_REG_LCFG		0x06
