@@ -3115,6 +3115,11 @@ static int packet_do_bind(struct sock *sk, const char *name, int ifindex,
 		goto out_unlock;
 	}
 
+	if (po->fanout) {
+		ret = -EINVAL;
+		goto out_unlock;
+	}
+
 	if (name) {
 		dev = dev_get_by_name_rcu(sock_net(sk), name);
 		if (!dev) {
