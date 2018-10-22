@@ -47,7 +47,12 @@ struct msm_flash_func_t {
 		struct msm_flash_cfg_data_t *);
 	int32_t (*camera_flash_query_current)(struct msm_flash_ctrl_t *,
 		struct msm_flash_query_data_t *);
-
+	int32_t (*camera_flash_torch_low)(struct msm_flash_ctrl_t *,
+		struct msm_flash_cfg_data_t *);
+	int32_t (*camera_flash_torch_mid)(struct msm_flash_ctrl_t *,
+		struct msm_flash_cfg_data_t *);
+	int32_t (*camera_flash_torch_high)(struct msm_flash_ctrl_t *,
+		struct msm_flash_cfg_data_t *);
 };
 
 struct msm_flash_table {
@@ -104,6 +109,15 @@ struct msm_flash_ctrl_t {
 	enum msm_camera_flash_state_t flash_state;
 	int32_t (*platform_flash_init)(struct msm_flash_ctrl_t *flash_ctrl,
 		struct msm_flash_cfg_data_t *flash_data);
+	bool front_flash_init;
+	uint16_t front_gpio_torch;
+	uint16_t front_gpio_flash;
+	const char * front_gpio_flash_labs;
+	bool rear_flash_init;
+	uint16_t rear_gpio_torch;
+	uint16_t rear_gpio_flash;
+	const char * rear_gpio_torch_labs;
+	const char * rear_gpio_flash_labs;
 };
 
 int msm_flash_i2c_probe(struct i2c_client *client,
