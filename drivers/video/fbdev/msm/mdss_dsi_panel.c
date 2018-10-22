@@ -369,8 +369,10 @@ int mdss_dsi_panel_reset(struct mdss_panel_data *pdata, int enable)
 	struct mdss_panel_info *pinfo = NULL;
 	int i, rc = 0;
 
+#ifdef CONFIG_TOUCHSCREEN_ILI2120
 	if (enable == 1)
 		ilitek_i2c_resume_test();
+#endif
 
 	if (pdata == NULL) {
 		pr_err("%s: Invalid input data\n", __func__);
@@ -1034,8 +1036,10 @@ static int mdss_dsi_panel_off(struct mdss_panel_data *pdata)
 		return -EINVAL;
 	}
 
+#ifdef CONFIG_TOUCHSCREEN_ILI2120
 	if (ilitek_gesture_enable == 1)
 		send_ilitek_TP_suspend_scnd_cmd();
+#endif
 
 	pinfo = &pdata->panel_info;
 	ctrl = container_of(pdata, struct mdss_dsi_ctrl_pdata,
