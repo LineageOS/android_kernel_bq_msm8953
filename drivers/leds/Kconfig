@@ -299,12 +299,6 @@ config LEDS_PCA963X
 	  LED driver chip accessed via the I2C bus. Supported
 	  devices include PCA9633 and PCA9634
 
-config LEDS_MSM_GPIO_FLASH
-	bool "LED support for MSM GPIO FLASH"
-	help
-	  This driver supports the leds functionality of GPIO Flash LED. It
-	  includes flash mode and torch mode.
-
 config LEDS_WM831X_STATUS
 	tristate "LED support for status LEDs on WM831x PMICs"
 	depends on LEDS_CLASS
