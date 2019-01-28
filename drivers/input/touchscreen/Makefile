@@ -94,3 +94,4 @@ obj-$(CONFIG_TOUCHSCREEN_SYNAPTICS_DSX_FW_UPDATE) 	+= synaptics_fw_update.o
 obj-$(CONFIG_TOUCHSCREEN_GT9XX)		+= gt9xx/
 #obj-$(CONFIG_TOUCHSCREEN_FT5X06)	+= lct_ctp_selftest.o lct_if_ctp_upgrade.o
 obj-$(CONFIG_TOUCHSCREEN_HIMAX_CHIPSET)	+= hxchipset/
+obj-$(CONFIG_TOUCHSCREEN_FTS)		+= focaltech_touch/
