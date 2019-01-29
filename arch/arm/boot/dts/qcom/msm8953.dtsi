@@ -117,6 +117,16 @@
 			alignment = <0 0x400000>;
 			size = <0 0x800000>;
 		};
+
+		/* pstore: reserved DDR memory region for post-mortem kernel logs */
+		pstore_reserve_mem: pstore_reserve_mem_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
+			reg = <0x00000000 0x30000000    /* Address */
+			       0x00000000 0x00300000>;  /* Size */
+			label = "pstore_reserve_mem";
+		};
 	};
 
 	aliases {
