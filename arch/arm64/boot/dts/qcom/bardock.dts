@@ -58,6 +58,20 @@
 		other_ext_mem: other_ext_region@0 {
 			reg = <0x0 0x83300000 0x0 0x3800000>;
 		};
+
+		/* pstore: reserved DDR memory region for post-mortem kernel logs */
+		pstore_reserve_mem: pstore_reserve_mem_region@0 {
+            compatible = "removed-dma-pool", "ramoops";
+            no-map;
+			reg = <0x0 0x91400000    /* Address */
+			       0x0 0x00100000>;  /* Size */
+            record-size = <0x10000>;
+			console-size = <0x20000>;
+			ftrace-size = <0x10000>;
+			pmsg-size = <0x20000>;
+			ecc-size = <16>;
+			label = "pstore_reserve_mem";
+		};
 	};
 
 	aliases {
