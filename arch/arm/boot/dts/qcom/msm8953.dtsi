@@ -36,7 +36,7 @@
 					dev = "/dev/block/platform/soc/7824900.sdhci/by-name/vendor";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait";
+					fsmgr_flags = "wait,verify";
 					status = "ok";
 				};
 				system {
@@ -44,7 +44,7 @@
 					dev = "/dev/block/platform/soc/7824900.sdhci/by-name/system";
 					type = "ext4";
 					mnt_flags = "ro,barrier=1,discard";
-					fsmgr_flags = "wait";
+					fsmgr_flags = "wait,verify";
 					status = "ok";
 				};
 
@@ -93,7 +93,7 @@
 			compatible = "shared-dma-pool";
 			reusable;
 			alignment = <0 0x400000>;
-			size = <0 0x09800000>;
+			size = <0 0x0b400000>;
 		};
 
 		qseecom_mem: qseecom_region@0 {
@@ -125,6 +125,16 @@
 			alloc-ranges = <0x0 0x80000000 0x0 0x10000000>;
 			alignment = <0 0x400000>;
 			size = <0 0x800000>;
+		};
+
+		/* pstore: reserved DDR memory region for post-mortem kernel logs */
+		pstore_reserve_mem: pstore_reserve_mem_region@0 {
+			linux,reserve-contiguous-region;
+			linux,reserve-region;
+			linux,remove-completely;
+			reg = <0x00000000 0x30000000    /* Address */
+			       0x00000000 0x00300000>;  /* Size */
+			label = "pstore_reserve_mem";
 		};
 	};
 
@@ -1223,9 +1233,9 @@
 			reg = <0x10 8>;
 		};
 
-		dload_type@18 {
+		dload_type@1c {
 			compatible = "qcom,msm-imem-dload-type";
-			reg = <0x18 4>;
+			reg = <0x1c 4>;
 		};
 
 		restart_reason@65c {

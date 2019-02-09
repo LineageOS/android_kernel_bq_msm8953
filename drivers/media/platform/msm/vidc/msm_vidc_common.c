@@ -2077,8 +2077,6 @@ static void handle_fbd(enum hal_command_response cmd, void *data)
 			vb->v4l2_buf.flags |= V4L2_QCOM_BUF_FLAG_READONLY;
 		if (fill_buf_done->flags1 & HAL_BUFFERFLAG_EOS)
 			vb->v4l2_buf.flags |= V4L2_QCOM_BUF_FLAG_EOS;
-		if (fill_buf_done->flags1 & HAL_BUFFERFLAG_ENDOFFRAME)
-			vb->v4l2_buf.flags |= V4L2_QCOM_BUF_FLAG_ENDOFFRAME;
 		if (fill_buf_done->flags1 & HAL_BUFFERFLAG_CODECCONFIG)
 			vb->v4l2_buf.flags &= ~V4L2_QCOM_BUF_FLAG_CODECCONFIG;
 		if (fill_buf_done->flags1 & HAL_BUFFERFLAG_SYNCFRAME)
@@ -3019,7 +3017,7 @@ static int set_output_buffers(struct msm_vidc_inst *inst,
 {
 	int rc = 0;
 	struct msm_smem *handle;
-	struct internal_buf *binfo = NULL;
+	struct internal_buf *binfo;
 	u32 smem_flags = 0, buffer_size;
 	struct hal_buffer_requirements *output_buf, *extradata_buf;
 	int i;
@@ -3125,10 +3123,10 @@ static int set_output_buffers(struct msm_vidc_inst *inst,
 	}
 	return rc;
 fail_set_buffers:
-	msm_comm_smem_free(inst, handle);
-err_no_mem:
 	kfree(binfo);
 fail_kzalloc:
+	msm_comm_smem_free(inst, handle);
+err_no_mem:
 	return rc;
 }
 
