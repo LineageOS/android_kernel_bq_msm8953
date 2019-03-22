@@ -36,7 +36,6 @@ obj-$(CONFIG_TOUCHSCREEN_ELO)		+= elo.o
 obj-$(CONFIG_TOUCHSCREEN_EGALAX)	+= egalax_ts.o
 obj-$(CONFIG_TOUCHSCREEN_FT5X06)	+= ft5x06_ts.o
 obj-$(CONFIG_TOUCHSCREEN_ILI2120)	+= ilitek_aim.o ilitek_sensor_test.o ilitek_tool.o ilitek_update.o lct_tp_fm_info.o lct_ctp_upgrade.o
-obj-$(CONFIG_TOUCHSCREEN_FTS) += focaltech_touch/
 obj-$(CONFIG_TOUCHSCREEN_FUJITSU)	+= fujitsu_ts.o
 obj-$(CONFIG_TOUCHSCREEN_GEN_VKEYS)	+= gen_vkeys.o
 obj-$(CONFIG_TOUCHSCREEN_ILI210X)	+= ili210x.o
