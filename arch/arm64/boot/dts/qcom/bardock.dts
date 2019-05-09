@@ -14,8 +14,11 @@
 /dts-v1/;
 
 #include "msm8953.dtsi"
-#include "msm-pmi8950.dtsi"
-
+#include "pmi8950.dtsi"
+#include "msm8953-pmi8950.dtsi"
+#include "msm8953-qrd-sku3.dtsi"
+#include "msm8953-camera-sensor-mtp.dtsi"
+#include "msm8953-mdss-panels.dtsi"
 #include "dsi-panel-ft8716-1080p-video.dtsi"
 #include "dsi-panel-otm1906b-1080p-cmd.dtsi"
 
@@ -49,7 +52,6 @@
     };
 };
 
-#include "msm8953-qrd-sku3.dtsi"
 #include "bardock-camera.dtsi"
 
 / {
