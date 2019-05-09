@@ -575,7 +575,7 @@
 	};
 };
 
-&pmi8950_charger {
+&qpnp_smbcharger {
 	qcom,iterm-ma = <150>;
 	qcom,float-voltage-mv = <4400>;
 	qcom,resume-delta-mv = <100>;
@@ -589,7 +589,8 @@
 	qcom,override-usb-current;
 };
 
-&pmi8950_fg {
+&qpnp_fg {
+	qcom,battery-data = <&qrd_batterydata>;
 	qcom,resume-soc = <97>;
 	qcom,fg-iterm-ma = <180>;
 	qcom,fg-chg-iterm-ma = <150>;
@@ -611,11 +612,14 @@
 	qcom,ext-sense-type-mp;
 };
 
-&qrd_batterydata {
-	qcom,batt-id-range-pct = <30>;
-	#include "batterydata-qrd-jiade-4v4-3075mah.dtsi"
-	#include "batterydata-qrd-feimaotui-4v4-3090mah.dtsi"
-	/delete-node/ qcom,qrd_msm8937_sku1_2920mah;
+/ {
+	/delete-node/ qcom,battery-data;
+	qrd_batterydata: qcom,battery-data {
+		qcom,batt-id-range-pct = <30>;
+		#include "batterydata-qrd-jiade-4v4-3075mah.dtsi"
+		#include "batterydata-qrd-feimaotui-4v4-3090mah.dtsi"
+		/delete-node/ qcom,qrd_msm8937_sku1_2920mah;
+	};
 };
 
 &i2c_2 {
