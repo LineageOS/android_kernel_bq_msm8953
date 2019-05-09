@@ -1680,7 +1680,7 @@ static const struct snd_soc_dapm_route tfa9888_input_dapm_routes[] = {
 
 static void tfa98xx_add_widgets(struct tfa98xx *tfa98xx)
 {
-	struct snd_soc_dapm_context *dapm = &tfa98xx->codec->dapm;
+	struct snd_soc_dapm_context *dapm = snd_soc_codec_get_dapm(tfa98xx->codec);
 	struct snd_soc_dapm_widget *widgets;
 	unsigned int num_dapm_widgets = ARRAY_SIZE(tfa98xx_dapm_widgets_common);
 
