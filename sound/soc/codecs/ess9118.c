@@ -21,7 +21,8 @@
 #include <linux/of_gpio.h>
 #include <linux/gpio.h>
 #include <linux/i2c.h>
-#include <linux/wakelock.h>
+#include <linux/device.h>
+#include <linux/pm_wakeup.h>
 
 #define INPUT_CONFIG_SOURCE 1
 #define I2S_BIT_FORMAT_MASK (0x03 << 6)
@@ -66,7 +67,7 @@ struct es9118_reg {
 	unsigned char value;
 };
 
-static struct wake_lock es9118_wakelock;
+static struct wakeup_source es9118_wakelock;
 static struct mutex es9118_lock;
 static struct delayed_work clk_divider_dwork;
 static int es9118_reg_no = 0;
@@ -128,7 +129,7 @@ static int es9118_read_reg(struct i2c_client *client, int reg);
 		SNDRV_PCM_FMTBIT_S24_LE | SNDRV_PCM_FMTBIT_S24_BE | \
 		SNDRV_PCM_FMTBIT_S32_LE | SNDRV_PCM_FMTBIT_S32_BE)
 
-static int es9118_register_dump_parm_set(const char *val, struct kernel_param *kp)
+static int es9118_register_dump_parm_set(const char *val, const struct kernel_param *kp)
 {
 	int i, reg_val;
 	param_set_int(val, kp);
@@ -215,7 +216,7 @@ static void es9118_power_off_delayed_work(struct work_struct *work)
 		es9118_enable_gpio(es9118_ctrl->cycle_gpio, 0);
 	    es9118_ctrl->b_power_on = false;
 	    es9118_ctrl->b_cycle_on = false;
-	    wake_lock_timeout(&es9118_wakelock, 3*HZ);
+	    __pm_wakeup_event(&es9118_wakelock, 3*HZ);
 	}
 	es9118_ctrl->b_closing = false;
 	
@@ -1280,7 +1281,7 @@ static int es9118_probe(struct i2c_client *client,const struct i2c_device_id *id
 	INIT_DELAYED_WORK(&pdata->power_off_dwork, es9118_power_off_delayed_work);
 	mutex_init(&es9118_lock);
 	INIT_DELAYED_WORK(&clk_divider_dwork, clk_divider_delayed_work);
-	wake_lock_init(&es9118_wakelock, WAKE_LOCK_SUSPEND, "es9118_wakelock");
+	wakeup_source_init(&es9118_wakelock, "es9118_wakelock");
 
 	dev_err(&client->dev, "%s: exit %d\n", __func__, ret);
 	return ret;
@@ -1294,7 +1295,7 @@ static int es9118_remove(struct i2c_client *client)
 	gpio_free(g_es9118_priv->es9118_data->cycle_gpio);
 	gpio_free(g_es9118_priv->es9118_data->reset_gpio);
 	gpio_free(g_es9118_priv->es9118_data->enable_gpio);
-	wake_lock_destroy(&es9118_wakelock);
+	wakeup_source_trash(&es9118_wakelock);
 	mutex_destroy(&es9118_lock);
 
 	return 0;
