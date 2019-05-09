@@ -9,7 +9,8 @@
 #include <linux/platform_device.h>
 #include <linux/power_supply.h>
 #include <linux/notifier.h>
-#include <linux/wakelock.h>
+#include <linux/device.h>
+#include <linux/pm_wakeup.h>
 #include <linux/timer.h>
 #include <linux/hrtimer.h>
 #include <linux/delay.h>
@@ -69,7 +70,7 @@ static int is_usb_protect_mode = 0;
 
 
 static struct usb_temp_device_info* g_di = NULL;
-static struct wake_lock usb_temp_wakelock;
+static struct wakeup_source usb_temp_wakelock;
 extern int charger_register_notifier(struct notifier_block *nb);
 int get_power_supply_info(struct power_supply *psy, int prop)
 {
@@ -83,11 +84,11 @@ int get_power_supply_info(struct power_supply *psy, int prop)
 
 	switch (prop) {
 	case POWER_SUPPLY_PROP_TYPE:
-		g_di->usb_psy->get_property(g_di->usb_psy, prop, &ret);
+		power_supply_get_property(g_di->batt_psy, prop, &ret);
 		pr_info("usb_temp.charger type = %d\n", ret.intval);
 		break;
 	case POWER_SUPPLY_PROP_PRESENT:
-		g_di->batt_psy->get_property(g_di->batt_psy, prop, &ret);
+		power_supply_get_property(g_di->batt_psy, prop, &ret);
 		pr_info("usb_temp.battery persent = %d\n", ret.intval);
 		break;
 	default:
@@ -147,19 +148,19 @@ early_param("androidboot.mode", early_parse_factory_mode);
 
 static void usb_temp_wake_lock(void)
 {
-	if(!wake_lock_active(&usb_temp_wakelock))
+	if(!usb_temp_wakelock.active)
 	{
 		pr_info("usb_temp.wake lock\n");
-		wake_lock(&usb_temp_wakelock);
+		__pm_stay_awake(&usb_temp_wakelock);
 	}
 }
 
 static void usb_temp_wake_unlock(void)
 {
-	if(wake_lock_active(&usb_temp_wakelock))
+	if(usb_temp_wakelock.active)
 	{
 		pr_info("usb_temp.wake unlock\n");
-		wake_unlock(&usb_temp_wakelock);
+		__pm_relax(&usb_temp_wakelock);
 	}
 }
 
@@ -237,7 +238,7 @@ static int get_batt_temp_value(void)
 		return INVALID_BATT_TEMP;
 	}
 
-	rc = g_di->batt_psy->get_property(g_di->batt_psy, POWER_SUPPLY_PROP_TEMP, &ret);
+	rc = power_supply_get_property(g_di->batt_psy, POWER_SUPPLY_PROP_TEMP, &ret);
 	if(rc)
 	{
 		pr_err("usb_temp. %s  get temp error!\n",__func__);
@@ -549,7 +550,7 @@ static int usb_temp_probe(struct platform_device *pdev)
 	{
 		goto free_gpio;
 	}
-	wake_lock_init(&usb_temp_wakelock, WAKE_LOCK_SUSPEND, "usb_temp_protect_wakelock");
+	wakeup_source_init(&usb_temp_wakelock, "usb_temp_protect_wakelock");
 	di->usb_temp_wq = create_singlethread_workqueue("usb_temp_protect_wq");
 	INIT_WORK(&di->usb_temp_check_wk, usb_temp_check_work);
 	hrtimer_init(&di->timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
