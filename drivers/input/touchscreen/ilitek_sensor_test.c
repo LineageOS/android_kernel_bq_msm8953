@@ -1118,7 +1118,7 @@ static ssize_t  Ilitek_touch_test_type_show(struct kobject *dev,
 
 static ssize_t Ilitek_touch_test_type_store(struct kobject *dev,struct kobj_attribute *attr,const char *buf, size_t count)
 {
-        if((strnicmp(buf, "1", 1)  == 0))
+        if((strncmp(buf, "1", 1)  == 0))
         {
             ilitek_TP_self_test_runing();
         } 
