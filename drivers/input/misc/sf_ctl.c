@@ -64,7 +64,8 @@
 #define ANDROID_WAKELOCK	1
 
 #if ANDROID_WAKELOCK
-#include <linux/wakelock.h>
+#include <linux/device.h>
+#include <linux/pm_wakeup.h>
 #endif
 
 /**
@@ -85,7 +86,7 @@ struct sf_ctl_device {
     u8 isInitialize;
     struct work_struct work_queue;
     struct input_dev* input;
-    struct wake_lock wakelock;
+    struct wakeup_source wakelock;
     struct notifier_block notifier;
 };
 
@@ -235,7 +236,7 @@ static irqreturn_t sf_ctl_device_irq(int irq, void* dev_id)
     xprintk(KERN_ERR, "%s(irq = %d, ..) toggled.\n", __FUNCTION__, irq);
     schedule_work(&sf_ctl_dev->work_queue);
 #if ANDROID_WAKELOCK
-	wake_lock_timeout(&sf_ctl_dev->wakelock, msecs_to_jiffies(5000));
+	__pm_wakeup_event(&sf_ctl_dev->wakelock, msecs_to_jiffies(5000));
 #endif
     enable_irq(irq);
     return IRQ_HANDLED;
@@ -588,7 +589,7 @@ static int __init sf_ctl_driver_init(void)
     }
 
 #if ANDROID_WAKELOCK
-	wake_lock_init(&sf_ctl_dev.wakelock, WAKE_LOCK_SUSPEND, "sunwave_intr");
+	wakeup_source_init(&sf_ctl_dev.wakelock, "sunwave_intr");
 #endif
 
     INIT_WORK(&sf_ctl_dev.work_queue, sf_ctl_device_event);
@@ -615,7 +616,7 @@ static void __exit sf_ctl_driver_exit(void)
 
     misc_deregister(&sf_ctl_dev.miscdev);
 #if ANDROID_WAKELOCK
-    wake_lock_destroy(&sf_ctl_dev.wakelock);
+    wakeup_source_trash(&sf_ctl_dev.wakelock);
 #endif
 			remove_proc_entry(PROC_NAME,NULL);
     xprintk(KERN_INFO, "sunwave fingerprint device control driver released.\n");
