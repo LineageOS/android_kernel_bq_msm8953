@@ -679,12 +679,12 @@
 	};
 };
 
-&pm8953_diangu_dig {
-	status = "ok";
+&msm_digital_codec {
+	status = "okay";
 };
 
-&pm8953_diangu_analog {
-	status = "ok";
+&pmic_analog_codec {
+	status = "okay";
 };
 
 &int_codec {
