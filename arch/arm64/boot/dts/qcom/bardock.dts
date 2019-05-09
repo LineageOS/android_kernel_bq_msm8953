@@ -408,7 +408,7 @@
 			compatible = "focaltech,fts";
 			reg = <0x38>;
 			interrupt-parent = <&tlmm>;
-			interrupts = <65 0x2>;
+			interrupts = <65 IRQ_TYPE_LEVEL_LOW>;
 			/*vdd_ana-supply = <&vdd_vreg>;*/
 			/*vdd-supply = <&pm8953_l10>;*/
 			vcc_i2c-supply = <&pm8953_l6>;
