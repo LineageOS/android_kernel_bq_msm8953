@@ -404,20 +404,20 @@ static int mdss_dsi_panel_power_off(struct mdss_panel_data *pdata)
 
 #ifdef CONFIG_TOUCHSCREEN_FTS
 	if (focaltech_gesture_enable == 1) {
-        ret = msm_dss_enable_vreg(
+        ret = msm_mdss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 1);
        } else
 #endif
 #ifdef CONFIG_TOUCHSCREEN_ILI2120
 	if (ilitek_gesture_enable == 1) {
-        ret = msm_dss_enable_vreg(
+        ret = msm_mdss_enable_vreg(
                ctrl_pdata->panel_power_data.vreg_config,
                ctrl_pdata->panel_power_data.num_vreg, 1);
        } else
 #endif
        {
-	ret = msm_dss_enable_vreg(
+	ret = msm_mdss_enable_vreg(
 		ctrl_pdata->panel_power_data.vreg_config,
 		ctrl_pdata->panel_power_data.num_vreg, 0);
        }
