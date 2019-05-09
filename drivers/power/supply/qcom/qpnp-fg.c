@@ -7103,7 +7103,7 @@ static int fg_of_init(struct fg_chip *chip)
 #ifdef CONFIG_MSM8953_PRODUCT
 #define IS_BARDOCK_BEFORE_PVT() ((gpio_get_value(127) == 0))
 	if(!IS_BARDOCK_BEFORE_PVT())
-	sense_type = of_property_read_bool(chip->spmi->dev.of_node,
+	sense_type = of_property_read_bool(chip->pdev->dev.of_node,
 					"qcom,ext-sense-type-mp");
 	else
 #endif

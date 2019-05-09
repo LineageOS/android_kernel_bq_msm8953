@@ -4525,6 +4525,7 @@ static int smbchg_change_usb_supply_type(struct smbchg_chip *chip,
 	 * Note: for SDP supporting current based on USB notifications.
 	 */
 	if (type == POWER_SUPPLY_TYPE_USB)
+		current_limit_ma = DEFAULT_SDP_MA;
 	else if (type == POWER_SUPPLY_TYPE_USB_CDP)
 		current_limit_ma = DEFAULT_CDP_MA;
 	else if (type == POWER_SUPPLY_TYPE_USB_HVDCP)
@@ -6227,15 +6228,16 @@ static void bq_temp_report_work(struct work_struct *work)
 	static int reported_temp = 250;
 	union power_supply_propval prop = {0,};
 
-	rc = chip->batt_psy.get_property(&chip->batt_psy,
+	rc = power_supply_get_property(chip->batt_psy,
 						POWER_SUPPLY_PROP_TEMP, &prop);
+
 	if (rc == 0)
 		temp = prop.intval;
         else
 		goto reschedule;
 
 	if (abs(temp - reported_temp) >= 5) {
-		power_supply_changed(&chip->batt_psy);
+		power_supply_changed(chip->batt_psy);
 		reported_temp = temp;
                 pr_info("reported_temp = %d\n", reported_temp);
 	}
@@ -6629,8 +6631,8 @@ static irqreturn_t usbin_ov_handler(int irq, void *_chip)
 		/* If OV condition is not detected anymore, restore health */
 		if (chip->usb_ov_det && chip->usb_psy) {
 			pr_smb(PR_MISC, "setting usb psy health GOOD\n");
-			rc = power_supply_set_health_state(chip->usb_psy,
-				POWER_SUPPLY_HEALTH_GOOD);
+			chip->usb_health = POWER_SUPPLY_HEALTH_GOOD;
+			power_supply_changed(chip->usb_psy);
 		}
 
 		chip->usb_ov_det = false;
