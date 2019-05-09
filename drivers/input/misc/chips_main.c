@@ -30,7 +30,8 @@
 #include <linux/list.h>
 #include <linux/delay.h>
 #include <linux/input.h>
-#include <linux/wakelock.h>
+#include <linux/device.h>
+#include <linux/pm_wakeup.h>
 
 #include <linux/fb.h>
 #include <linux/notifier.h>
@@ -78,7 +79,7 @@
 ******************************************/
 const static unsigned bufsiz = 10240*2;
 static int display_blank_flag = -1;
-static struct wake_lock g_wakelock;
+static struct wakeup_source g_wakelock;
 struct chips_data *g_spidev;
 
 static DECLARE_BITMAP(minors,N_SPI_MINORS);
@@ -210,8 +211,8 @@ static int chips_register_input(struct chips_data *chips_dev)
 static irqreturn_t chips_irq_handler(int irq,void *dev)
 {
     chips_dbg("irq_handler\n");
-    if(!wake_lock_active(&g_wakelock)){
-		wake_lock_timeout(&g_wakelock, 6*HZ);
+    if(!g_wakelock.active){
+		__pm_wakeup_event(&g_wakelock, 6*HZ);
 	}
 
 	chips_kill_fasync();
@@ -696,7 +697,7 @@ static int chips_dev_init(void)
 	chips_dev =(struct chips_data*)chips_get_drvdata();
 
 	/*Initialize wake lock*/
-	wake_lock_init(&g_wakelock, WAKE_LOCK_SUSPEND, "chips_wakelock");
+	wakeup_source_init(&g_wakelock, "chips_wakelock");
 
 	/*Register interrupt handler function, can view /proc/interrupts to confirm whether or not registered successfully*/
 	irq = chips_get_irqno(chips_dev);
@@ -742,7 +743,7 @@ static int chips_dev_uninit(void)
 		free_irq(chips_dev->irq, chips_dev);
 
 	/*Unregister wake lock*/
-	wake_lock_destroy(&g_wakelock);
+	wakeup_source_trash(&g_wakelock);
 
 	return 0;
 }
