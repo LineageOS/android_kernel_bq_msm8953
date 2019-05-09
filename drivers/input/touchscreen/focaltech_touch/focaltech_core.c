@@ -59,7 +59,7 @@ static ssize_t gesture_store(struct device *dev, struct device_attribute *attr, 
 
     printk(" buff =  %s \n",buff);
 
-    if((strnicmp(buff, "1", 1)  == 0))
+    if((strncmp(buff, "1", 1)  == 0))
     {
         focaltech_gesture_enable = 1;
     } else {
