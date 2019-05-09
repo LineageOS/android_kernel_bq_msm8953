@@ -87,7 +87,7 @@
 		};
 	};
 	pm8953_1: qcom,pm8953@1 {
-		pm8953_pwm: pwm@bc00 {
+		pm8953_pwm: qcom,pwms@bc00 {
 			status = "okay";
 		};
 	};
