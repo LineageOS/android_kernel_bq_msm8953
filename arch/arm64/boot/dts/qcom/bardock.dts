@@ -518,17 +518,6 @@
 };
 
 &pm8953_vadc {
-	chan@11 {
-		label = "case_therm";
-		reg = <0x11>;
-		qcom,decimation = <0>;
-		qcom,pre-div-channel-scaling = <0>;
-		qcom,calibration-type = "ratiometric";
-		qcom,scale-function = <2>;
-		qcom,hw-settle-time = <2>;
-		qcom,fast-avg-setup = <0>;
-		qcom,vadc-thermal-node;
-	};
 	chan@13 {
 		label = "sub_board";
 		status = "okay";
