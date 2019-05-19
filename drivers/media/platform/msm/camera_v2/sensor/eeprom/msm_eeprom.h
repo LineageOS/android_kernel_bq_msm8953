@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2015, 2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2015, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -47,45 +47,5 @@ struct msm_eeprom_ctrl_t {
 	struct msm_eeprom_memory_block_t cal_data;
 	uint8_t is_supported;
 };
-
-// EEPROM Vendor identifiers for EEPROM dynamic loading
-#define CAMERA_SENSOR_NAME_MAX_LENGTH		128
-
-typedef enum __camera_vendor_module_id{
-	MID_NULL = 0,
-	MID_SUNNY,
-	MID_TRULY,
-	MID_A_KERR,
-	MID_LITEARRAY,
-	MID_DARLING,
-	MID_QTECH,
-	MID_OFILM,
-	MID_HUAQUAN,
-	MID_KINGCOM = MID_HUAQUAN,
-	MID_BOOYI,
-	MID_LAIMU,
-	MID_WDSEN,
-	MID_SUNRISE,
-	MID_PRIMAX = 0x17,
-	MID_AVC,
-	MID_MAX
-} camera_vendor_module_id;
-
-struct vendor_eeprom{
-	char eeprom_name[CAMERA_SENSOR_NAME_MAX_LENGTH];
-	camera_vendor_module_id module_id;
-};
-
-// Table for Sensor and EEPROM matching inside a sensor module
-typedef struct __camera_vendor_module {
-	char sensor_name[CAMERA_SENSOR_NAME_MAX_LENGTH];
-	char eeprom_name[CAMERA_SENSOR_NAME_MAX_LENGTH];
-	camera_vendor_module_id module_id;
-	camera_vendor_module_id (*get_otp_id)(struct msm_eeprom_ctrl_t *);
-} camera_vendor_module;
-
-extern const uint32_t CAMERA_VENDOR_EEPROM_COUNT_MAX;
-extern const camera_vendor_module camera_vendor_module_table[];
-extern struct vendor_eeprom s_vendor_eeprom[];
 
 #endif
