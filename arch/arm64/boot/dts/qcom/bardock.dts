@@ -535,6 +535,7 @@
 };
 
 &mdss_dsi0 {
+	/delete-property/ vdd-supply;
 	qcom,dsi-pref-prim-pan = <&dsi_ft8716_1080_vid>;
 };
 
