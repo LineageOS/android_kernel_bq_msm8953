@@ -186,6 +186,12 @@ config LEDS_HP6XX
 	  This option enables LED support for the handheld
 	  HP Jornada 620/660/680/690.
 
+config LEDS_MSM_GPIO_FLASH
+	bool "LED support for MSM GPIO FLASH"
+	help
+	  This driver supports the leds functionality of GPIO Flash LED. It
+	  includes flash mode and torch mode.
+
 config LEDS_PCA9532
 	tristate "LED driver for PCA9532 dimmer"
 	depends on LEDS_CLASS
