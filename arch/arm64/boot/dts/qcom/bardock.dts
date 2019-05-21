@@ -576,6 +576,8 @@
 
 &mdss_dsi0 {
 	/delete-property/ vdd-supply;
+	lab-supply = <&lab_regulator>;
+	ibb-supply = <&ibb_regulator>;
 	qcom,dsi-pref-prim-pan = <&dsi_ft8716_1080_vid>;
 	pinctrl-names = "mdss_default", "mdss_sleep";
 	pinctrl-0 = <&mdss_dsi_active &mdss_te_active>;
@@ -595,8 +597,7 @@
 };
 
 &mdss_dsi1 {
-	lab-supply = <&lab_regulator>;
-	ibb-supply = <&ibb_regulator>;
+	status = "disabled";
 };
 
 &dsi_panel_pwr_supply {
