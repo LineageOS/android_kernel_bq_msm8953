@@ -33,6 +33,8 @@
 #include "msm-analog-cdc-regmap.h"
 #include "../wcd-mbhc-v2-api.h"
 
+#define MSM8953_BARDOCK 1
+
 #define DRV_NAME "pmic_analog_codec"
 #define SDM660_CDC_RATES (SNDRV_PCM_RATE_8000 | SNDRV_PCM_RATE_16000 |\
 			SNDRV_PCM_RATE_32000 | SNDRV_PCM_RATE_44100 |\
@@ -2692,10 +2694,11 @@ static void wcd_imped_config(struct snd_soc_codec *codec,
 			     uint32_t imped, bool set_gain)
 {
 	uint32_t value;
+#if !(defined MSM8953_BARDOCK)
 	int codec_version;
 	struct sdm660_cdc_priv *sdm660_cdc =
 				snd_soc_codec_get_drvdata(codec);
-
+#endif
 	value = wcd_get_impedance_value(imped);
 
 	if (value < wcd_imped_val[0]) {
@@ -2704,7 +2707,7 @@ static void wcd_imped_config(struct snd_soc_codec *codec,
 			 __func__);
 		return;
 	}
-
+#if !(defined MSM8953_BARDOCK)
 	codec_version = get_codec_version(sdm660_cdc);
 
 	if (set_gain) {
@@ -2756,7 +2759,7 @@ static void wcd_imped_config(struct snd_soc_codec *codec,
 			MSM89XX_PMIC_ANALOG_NCP_VCTRL,
 			0x07, 0x04);
 	}
-
+#endif
 	dev_dbg(codec->dev, "%s: Exit\n", __func__);
 }
 
