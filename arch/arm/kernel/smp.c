@@ -76,6 +76,10 @@ enum ipi_msg_type {
 	IPI_CPU_STOP,
 	IPI_IRQ_WORK,
 	IPI_COMPLETION,
+	/*
+	 * CPU_BACKTRACE is special and not included in NR_IPI
+	 * or tracable with trace_ipi_*
+	 */
 	IPI_CPU_BACKTRACE,
 	/*
 	 * SGI8-15 can be reserved by secure firmware, and thus may
@@ -535,7 +539,7 @@ static void smp_cross_call_common(const struct cpumask *cpumask,
 	for_each_cpu(cpu, cpumask)
 		per_cpu(pending_ipi, cpu) = true;
 
-	smp_cross_call(cpumask, func);
+	__smp_cross_call(cpumask, func);
 }
 
 void show_ipi_list(struct seq_file *p, int prec)
