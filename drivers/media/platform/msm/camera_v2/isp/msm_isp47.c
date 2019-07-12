@@ -36,7 +36,7 @@
 #define VFE47_STATS_BURST_LEN 3
 #define VFE47_UB_SIZE_VFE0 2048
 #define VFE47_UB_SIZE_VFE1 1536
-#define VFE47_UB_STATS_SIZE 144
+#define VFE47_UB_STATS_SIZE 288
 #define MSM_ISP47_TOTAL_IMAGE_UB_VFE0 (VFE47_UB_SIZE_VFE0 - VFE47_UB_STATS_SIZE)
 #define MSM_ISP47_TOTAL_IMAGE_UB_VFE1 (VFE47_UB_SIZE_VFE1 - VFE47_UB_STATS_SIZE)
 #define VFE47_WM_BASE(idx) (0xA0 + 0x2C * idx)
@@ -2218,15 +2218,15 @@ void msm_vfe47_stats_cfg_ub(struct vfe_device *vfe_dev)
 	int i;
 	uint32_t ub_offset = 0;
 	uint32_t ub_size[VFE47_NUM_STATS_TYPE] = {
-		16, /* MSM_ISP_STATS_HDR_BE */
-		16, /* MSM_ISP_STATS_BG */
-		16, /* MSM_ISP_STATS_BF */
-		16, /* MSM_ISP_STATS_HDR_BHIST */
-		16, /* MSM_ISP_STATS_RS */
-		16, /* MSM_ISP_STATS_CS */
-		16, /* MSM_ISP_STATS_IHIST */
-		16, /* MSM_ISP_STATS_BHIST */
-		16, /* MSM_ISP_STATS_AEC_BG */
+		32, /* MSM_ISP_STATS_HDR_BE */
+		32, /* MSM_ISP_STATS_BG */
+		32, /* MSM_ISP_STATS_BF */
+		32, /* MSM_ISP_STATS_HDR_BHIST */
+		32, /* MSM_ISP_STATS_RS */
+		32, /* MSM_ISP_STATS_CS */
+		32, /* MSM_ISP_STATS_IHIST */
+		32, /* MSM_ISP_STATS_BHIST */
+		32, /* MSM_ISP_STATS_AEC_BG */
 	};
 	if (vfe_dev->pdev->id == ISP_VFE1)
 		ub_offset = VFE47_UB_SIZE_VFE1;
