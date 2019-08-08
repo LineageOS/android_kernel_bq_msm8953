@@ -1598,7 +1598,6 @@ int __msm_jpeg_init(struct msm_jpeg_device *pgmn_dev)
 	cam_smmu_reg_client_page_fault_handler(
 			pgmn_dev->iommu_hdl,
 			msm_jpeg_iommu_fault_handler,
-			NULL,
 			pgmn_dev);
 
 	/* setup all the resources for the jpeg driver */
