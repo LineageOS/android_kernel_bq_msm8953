@@ -716,6 +716,7 @@
 	qcom,lra-auto-res-mode = "none";
 	qcom,lra-res-cal-period = <1>;
 	qcom,correct-lra-drive-freq;
+	qcom,lra-auto-mode;
 };
 
 &i2c_6 {
