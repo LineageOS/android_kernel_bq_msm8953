@@ -355,6 +355,7 @@ struct hap_chip {
 	atomic_t			state;
 	bool				module_en;
 	bool				lra_auto_mode;
+	bool				lra_disable_short_pattern;
 	bool				play_irq_en;
 	bool				auto_res_err_recovery_hw;
 	bool				vcc_pon_enabled;
@@ -1220,7 +1221,7 @@ static int qpnp_haptics_auto_mode_config(struct hap_chip *chip, int time_ms)
 	old_ares_mode = chip->ares_cfg.auto_res_mode;
 	old_play_mode = chip->play_mode;
 	pr_debug("auto_mode, time_ms: %d\n", time_ms);
-	if (time_ms <= 20) {
+	if (!chip->lra_disable_short_pattern && time_ms <= 20) {
 		wave_samp[0] = HAP_WF_SAMP_MAX;
 		wave_samp[1] = HAP_WF_SAMP_MAX;
 		chip->wf_samp_len = 2;
@@ -2391,6 +2392,10 @@ static int qpnp_haptics_parse_dt(struct hap_chip *chip)
 		chip->auto_res_err_recovery_hw =
 			of_property_read_bool(node,
 				"qcom,auto-res-err-recovery-hw");
+
+		chip->lra_disable_short_pattern =
+				of_property_read_bool(node,
+					"qcom,lra_disable_short_pattern");
 
 		if (chip->revid->pmic_subtype != PM660_SUBTYPE)
 			chip->auto_res_err_recovery_hw = false;
