@@ -717,6 +717,7 @@
 	qcom,lra-res-cal-period = <1>;
 	qcom,correct-lra-drive-freq;
 	qcom,lra-auto-mode;
+	qcom,lra_disable_short_pattern;
 };
 
 &i2c_6 {
