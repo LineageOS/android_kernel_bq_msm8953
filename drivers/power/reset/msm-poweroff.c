@@ -69,6 +69,8 @@ static int download_mode = 1;
 static const int download_mode;
 #endif
 
+static bool force_warm_reboot;
+
 #ifdef CONFIG_QCOM_DLOAD_MODE
 #define EDL_MODE_PROP "qcom,msm-imem-emergency_download_mode"
 #define DL_MODE_PROP "qcom,msm-imem-download_mode"
