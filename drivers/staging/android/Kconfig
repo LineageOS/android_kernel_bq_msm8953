@@ -24,6 +24,30 @@ config ANDROID_LOW_MEMORY_KILLER
 	  scripts (/init.rc), and it defines priority values with minimum free memory size
 	  for each priority.
 
+config ANDROID_LOW_MEMORY_KILLER_TNG
+	bool "Android Low Memory Killer TNG"
+	depends on ANDROID_LOW_MEMORY_KILLER
+	select OOM_SCORE_NOTIFIER
+	---help---
+	  The NEXT generation (TNG) lowmemorykiller.
+	  Registers processes to be killed when low memory conditions, this is useful
+	  as there is no particular swap space on android.
+
+	  The registered process will kills according to the priorities in android init
+	  scripts (/init.rc), and it defines priority values with minimum free memory size
+	  for each priority.
+
+config ANDROID_LOW_MEMORY_KILLER_STATS
+	bool "Android Low Memory Killer: collect statistics"
+	depends on ANDROID_LOW_MEMORY_KILLER_TNG
+	default n
+	help
+	  Create a file in /proc/lmkstats that includes
+	  collected statistics about kills, scans and counts
+	  and  interaction with the shrinker. Its content
+	  will be different depending on lmk implementation used
+	  in TNG lowmemorykiller.
+
 config ANDROID_LOW_MEMORY_KILLER_AUTODETECT_OOM_ADJ_VALUES
 	bool "Android Low Memory Killer: detect oom_adj values"
 	depends on ANDROID_LOW_MEMORY_KILLER
@@ -41,17 +65,6 @@ config ANDROID_VSOC
 	  This option adds support for the Virtual SoC driver needed to boot
 	  a 'cuttlefish' Android image inside QEmu. The driver interacts with
 	  a QEmu ivshmem device. If built as a module, it will be called vsoc.
-
-config ANDROID_LMK_NOTIFY_TRIGGER
-	bool "Android Low Memory Killer Notify Trigger"
-	depends on ANDROID_LOW_MEMORY_KILLER
-	default n
-	---help---
-	Create node "/sys/kernel/mm/lowmemkiller/notify_trigger_active",
-	on which an userspace application can poll for notification when
-	the number of free physical memory pages in the system falls below
-	a set threshold. The threshold is set by the new module parameter
-	"/sys/module/lowmemorykiller/parameters/notify_trigger".
 
 source "drivers/staging/android/ion/Kconfig"
 
