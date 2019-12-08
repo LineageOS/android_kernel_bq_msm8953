@@ -138,24 +138,24 @@
 	nq@28 {
 		status = "disabled";
 	};
-	
-    nxp@28 {
-            compatible = "nxp,pn547";
-            reg = <0x28>;
-            qcom,nxp-irq = <&tlmm 17 0x00>;
-            qcom,nxp-ven = <&tlmm 16 0x00>;
-            qcom,nxp-dw-req = <&tlmm 62 0x00>;
-            qcom,nxp-clkreq = <&pm8953_gpios 2 0x00>;
-            interrupt-parent = <&tlmm>;
-            qcom,clk-src = "BBCLK2";
-            interrupts = <17 0>;
-            interrupt-names = "nxp-irq";
-            pinctrl-names = "nfc_active", "nfc_suspend";
-            pinctrl-0 = <&nfc_int_active &nfc_disable_active>;
-            pinctrl-1 = <&nfc_int_suspend &nfc_disable_suspend>;
-            clocks = <&clock_gcc clk_bb_clk2_pin>;
-            clock-names = "ref_clk";
-    };
+
+	nfc@28 {
+	    compatible = "nxp,pn547";
+	    reg = <0x28>;
+	    interrupt-names = "nxp-irq";
+	    interrupt-parent = <&tlmm>;
+	    interrupts = <17 0x0>;
+	    nxp,irq_gpio = <&tlmm 17 0x00>;
+	    nxp,dwld_en = <&tlmm 62 0x00>;
+	    nxp,ven = <&tlmm 16 0x00>;
+	    qcom,clk-src = "BBCLK2";
+	    qcom,clk-gpio = <&pm8953_gpios 2 0x00>;
+	    clocks = <&clock_gcc clk_bb_clk2_pin>;
+	    clock-names = "nfc_clk";
+	    pinctrl-names = "pn547-active", "pn547-inactive";
+	    pinctrl-0 = <&nfc_int_active &nfc_disable_active>;
+	    pinctrl-1 = <&nfc_int_suspend &nfc_disable_suspend>;
+	};
 };
 
 &tlmm {
