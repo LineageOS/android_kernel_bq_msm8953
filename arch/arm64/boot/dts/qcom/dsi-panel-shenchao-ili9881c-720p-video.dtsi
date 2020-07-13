@@ -44,6 +44,7 @@
 		qcom,mdss-dsi-border-color = <0>;
                 qcom,mdss-pan-physical-width-dimension = <65>;
                 qcom,mdss-pan-physical-height-dimension = <115>;
+		qcom,panel-allow-phy-poweroff;
 		qcom,mdss-dsi-on-command = [39 01 00 00 00 00   04 FF 98 81 03
 		39 01 00 00 00 00	02 01 08
 		39 01 00 00 00 00	02 02 00
