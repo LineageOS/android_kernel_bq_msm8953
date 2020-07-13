@@ -2179,6 +2179,7 @@ static int mdss_dsi_parse_panel_features(struct device_node *np,
 
 	pinfo->allow_phy_power_off = of_property_read_bool(np,
 		"qcom,panel-allow-phy-poweroff");
+	printk("display: poweroff=%d\n", pinfo->allow_phy_power_off);
 
 	mdss_dsi_parse_esd_params(np, ctrl);
 

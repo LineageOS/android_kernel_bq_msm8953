@@ -979,7 +979,7 @@ static void mdss_dsi_phy_power_off(
 		return;
 
 	pinfo = &ctrl->panel_data.panel_info;
-
+	printk("%s\n",__FUNCTION__);
 	if ((ctrl->shared_data->phy_rev != DSI_PHY_REV_20) ||
 		!pinfo->allow_phy_power_off) {
 		pr_debug("%s: ctrl%d phy rev:%d panel support for phy off:%d\n",
@@ -1003,6 +1003,7 @@ static void mdss_dsi_8996_phy_power_on(
 	char *ip;
 	u32 data;
 
+	printk("%s\n",__FUNCTION__);
 	pd = &(((ctrl->panel_data).panel_info.mipi).dsi_phy_db);
 
 	/* 4 lanes + clk lane configuration */
@@ -2242,7 +2243,7 @@ int mdss_dsi_pre_clkoff_cb(void *priv,
 		 * Enable DSI clamps only if entering idle power collapse or
 		 * when ULPS during suspend is enabled.
 		 */
-		if ((ctrl->ctrl_state & CTRL_STATE_DSI_ACTIVE) ||
+		if (true ||(ctrl->ctrl_state & CTRL_STATE_DSI_ACTIVE) ||
 			pdata->panel_info.ulps_suspend_enabled) {
 			mdss_dsi_phy_power_off(ctrl);
 			rc = mdss_dsi_clamp_ctrl(ctrl, 1);
