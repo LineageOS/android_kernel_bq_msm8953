@@ -783,7 +783,12 @@ static int msm_isp_buf_done(struct msm_isp_buf_mgr *buf_mgr,
 	state = buf_info->state;
 
 	if (MSM_ISP_BUFFER_SRC_HAL == BUF_SRC(bufq->stream_id)) {
+#ifdef CONFIG_MSM_ISP_V1
+		if (state == MSM_ISP_BUFFER_STATE_DEQUEUED ||
+			state == MSM_ISP_BUFFER_STATE_DIVERTED) {
+#else
 		if (state == MSM_ISP_BUFFER_STATE_DEQUEUED) {
+#endif
 			buf_info->state = MSM_ISP_BUFFER_STATE_DISPATCHED;
 			spin_unlock_irqrestore(&bufq->bufq_lock, flags);
 			buf_mgr->vb2_ops->buf_done(buf_info->vb2_v4l2_buf,
