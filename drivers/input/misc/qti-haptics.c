@@ -30,6 +30,7 @@
 #include <linux/slab.h>
 #include <linux/types.h>
 #include <linux/uaccess.h>
+#include <linux/qpnp/qpnp-revid.h>
 
 enum actutor_type {
 	ACT_LRA,
@@ -221,6 +222,7 @@ struct qti_hap_chip {
 	struct platform_device		*pdev;
 	struct device			*dev;
 	struct regmap			*regmap;
+	struct pmic_revid_data	*revid;
 	struct input_dev		*input_dev;
 	struct pwm_device		*pwm_dev;
 	struct qti_hap_config		config;
@@ -1275,6 +1277,7 @@ static int qti_haptics_parse_dt(struct qti_hap_chip *chip)
 	const struct device_node *node = chip->dev->of_node;
 	struct device_node *child_node;
 	struct qti_hap_effect *effect;
+	struct device_node *revid_node;
 	const char *str;
 	int rc = 0, tmp, i = 0, j, m;
 
@@ -1284,6 +1287,25 @@ static int qti_haptics_parse_dt(struct qti_hap_chip *chip)
 		return rc;
 	}
 	chip->reg_base = (u16)tmp;
+
+	revid_node = of_parse_phandle(node, "qcom,pmic-revid", 0);
+	if (!revid_node) {
+		pr_err("Missing qcom,pmic-revid property\n");
+		return -EINVAL;
+	}
+
+	chip->revid = get_revid_data(revid_node);
+	of_node_put(revid_node);
+	if (IS_ERR_OR_NULL(chip->revid)) {
+		pr_err("Unable to get pmic_revid rc=%ld\n",
+			PTR_ERR(chip->revid));
+		/*
+		 * the revid peripheral must be registered, any failure
+		 * here only indicates that the rev-id module has not
+		 * probed yet.
+		 */
+		return -EPROBE_DEFER;
+	}
 
 	chip->sc_irq = platform_get_irq_byname(chip->pdev, "hap-sc-irq");
 	if (chip->sc_irq < 0) {
