@@ -176,6 +176,13 @@ enum haptics_custom_effect_param {
 #define REG_HAP_SEC_ACCESS		0xD0
 #define REG_HAP_PERPH_RESET_CTL3	0xDA
 
+/* haptic debug register set */
+static u8 qpnp_hap_dbg_regs[] = {
+    0x0a, 0x0b, 0x0c, 0x46, 0x48, 0x4c, 0x4d, 0x4e, 0x4f, 0x51, 0x52, 0x53,
+    0x54, 0x55, 0x56, 0x57, 0x58, 0x5c, 0x5e, 0x60, 0x61, 0x62, 0x63, 0x64,
+    0x65, 0x66, 0x67, 0x70, 0xE3,
+};
+
 struct qti_hap_effect {
 	int			id;
 	u8			*pattern;
@@ -1829,6 +1836,23 @@ static const struct file_operations pattern_dbgfs_ops = {
 	.open = simple_open,
 };
 
+/* debugfs show debug registers */
+static int debugfs_qpnp_hap_dump_regs_show(struct seq_file *s, void *v)
+{
+    struct qti_hap_chip *chip = s->private;
+
+    int i;
+    u8 val;
+
+    for (i = 0; i < ARRAY_SIZE(qpnp_hap_dbg_regs); i++) {
+	qti_haptics_read(chip, qpnp_hap_dbg_regs[i], &val, 1);
+	seq_printf(s, "qpnp_haptics: REG_0x%x = 0x%x\n", qpnp_hap_dbg_regs[i], val);
+    }
+
+    return 0;
+}
+DEFINE_SHOW_ATTRIBUTE(debugfs_qpnp_hap_dump_regs);
+
 static int create_effect_debug_files(struct qti_hap_effect *effect,
 				struct dentry *dir)
 {
@@ -1888,13 +1912,19 @@ static int create_effect_debug_files(struct qti_hap_effect *effect,
 
 static int qti_haptics_add_debugfs(struct qti_hap_chip *chip)
 {
-	struct dentry *hap_dir, *effect_dir;
+	struct dentry *hap_dir, *effect_dir, *file;
 	char str[12] = {0};
 	int i, rc = 0;
 
 	hap_dir = debugfs_create_dir("haptics", NULL);
 	if (!hap_dir) {
 		pr_err("create haptics debugfs directory failed\n");
+		return -ENOMEM;
+	}
+
+	file = debugfs_create_file("dump_regs", 0644, hap_dir, chip, &debugfs_qpnp_hap_dump_regs_fops);
+	if (!file) {
+		pr_err("create dump_regs debugfs node failed\n");
 		return -ENOMEM;
 	}
 
