@@ -77,6 +77,11 @@ enum haptics_custom_effect_param {
 	CUSTOM_DATA_LEN,
 };
 
+/* status flags */
+enum hap_status {
+    AUTO_RESONANCE_ENABLED = BIT(0),
+};
+
 /* common definitions */
 #define HAP_BRAKE_PATTERN_MAX		4
 #define HAP_WAVEFORM_BUFFER_MAX		8
@@ -97,6 +102,9 @@ enum haptics_custom_effect_param {
 #define REG_HAP_STATUS1			0x0A
 #define HAP_SC_DET_BIT			BIT(3)
 #define HAP_BUSY_BIT			BIT(1)
+
+#define HAP_LRA_AUTO_RES_LO_REG	0x0B
+#define HAP_LRA_AUTO_RES_HI_REG	0x0C
 
 #define REG_HAP_EN_CTL1			0x46
 #define HAP_EN_BIT			BIT(7)
@@ -124,6 +132,7 @@ enum haptics_custom_effect_param {
 #define HAP_AUTO_RES_EN_DLY_MASK	GENMASK(2, 0)
 #define AUTO_RES_CNT_ERR_DELTA(x)	(x << HAP_AUTO_RES_CNT_ERR_DELTA_SHIFT)
 #define AUTO_RES_EN_DLY(x)		x
+#define AUTO_RES_ERR_BIT		0x10
 
 #define REG_HAP_CFG1			0x4C
 #define REG_HAP_CFG2			0x4D
@@ -168,6 +177,10 @@ enum haptics_custom_effect_param {
 #define REG_HAP_SC_DEB_CFG		0x53
 #define REG_HAP_RATE_CFG1		0x54
 #define REG_HAP_RATE_CFG2		0x55
+#define HAP_RATE_CFG1_MASK		0xFF
+#define HAP_RATE_CFG2_MASK		0xF0
+#define HAP_RATE_CFG2_SHFT		8
+#define HAP_RATE_CFG_STEP_US	5
 #define REG_HAP_INTERNAL_PWM		0x56
 #define REG_HAP_EXTERNAL_PWM		0x57
 #define REG_HAP_PWM			0x58
@@ -202,6 +215,25 @@ enum haptics_custom_effect_param {
 
 #define REG_HAP_SEC_ACCESS		0xD0
 #define REG_HAP_PERPH_RESET_CTL3	0xDA
+
+#define POLL_TIME_AUTO_RES_ERR_NS	(20 * NSEC_PER_MSEC)
+
+#define MAX_POSITIVE_VARIATION_LRA_FREQ 30
+#define MAX_NEGATIVE_VARIATION_LRA_FREQ -30
+#define FREQ_VARIATION_STEP		5
+#define AUTO_RES_ERROR_CAPTURE_RES	5
+#define AUTO_RES_ERROR_MAX		30
+#define ADJUSTED_LRA_PLAY_RATE_CODE_ARRSIZE \
+    ((MAX_POSITIVE_VARIATION_LRA_FREQ - MAX_NEGATIVE_VARIATION_LRA_FREQ) \
+     / FREQ_VARIATION_STEP)
+#define LRA_DRIVE_PERIOD_POS_ERR(hap, rc_clk_err_percent) \
+	(hap->init_drive_period_code = (hap->init_drive_period_code * \
+		    (1000 + rc_clk_err_percent_x10)) / 1000)
+#define LRA_DRIVE_PERIOD_NEG_ERR(hap, rc_clk_err_percent) \
+	(hap->init_drive_period_code = (hap->init_drive_period_code * \
+		    (1000 - rc_clk_err_percent_x10)) / 1000)
+
+u32 adjusted_lra_play_rate_code[ADJUSTED_LRA_PLAY_RATE_CODE_ARRSIZE];
 
 /* haptic debug register set */
 static u8 qpnp_hap_dbg_regs[] = {
@@ -240,8 +272,15 @@ struct qti_hap_config {
 	u16			vmax_mv;
 	u16			ilim_ma;
 	u16			play_rate_us;
+	u16			last_rate_cfg;
 	bool			lra_allow_variable_play_rate;
 	bool			use_ext_wf_src;
+	u32			init_drive_period_code;
+	u8			drive_period_code_max_limit_percent_variation;
+	u8			drive_period_code_min_limit_percent_variation;
+	u16			drive_period_code_max_limit;
+	u16			drive_period_code_min_limit;
+	bool		correct_lra_drive_freq;
 };
 
 struct qti_hap_chip {
@@ -258,6 +297,7 @@ struct qti_hap_chip {
 	struct regulator		*vdd_supply;
 	struct hrtimer			stop_timer;
 	struct hrtimer			hap_disable_timer;
+	struct hrtimer			auto_res_err_poll_timer;
 	struct dentry			*hap_debugfs;
 	struct notifier_block		twm_nb;
 	spinlock_t			bus_lock;
@@ -272,6 +312,7 @@ struct qti_hap_chip {
 	bool				vdd_enabled;
 	bool				twm_state;
 	bool				haptics_ext_pin_twm;
+	u32				status_flags;
 };
 
 struct hap_addr_val {
@@ -633,9 +674,17 @@ static int qti_haptics_config_brake(struct qti_hap_chip *chip, u8 *brake)
 	return rc;
 }
 
+static bool is_sw_lra_auto_resonance_control(struct qti_hap_chip *chip)
+{
+	if (chip->config.act_type != ACT_LRA && !chip->config.correct_lra_drive_freq)
+		return false;
+
+	return true;
+}
+
 static int qti_haptics_lra_auto_res_enable(struct qti_hap_chip *chip, bool en)
 {
-	int rc;
+	int rc=0;
 	u8 addr, val, mask;
 
 	addr = REG_HAP_AUTO_RES_CTRL;
@@ -643,9 +692,106 @@ static int qti_haptics_lra_auto_res_enable(struct qti_hap_chip *chip, bool en)
 	val = en ? HAP_AUTO_RES_EN_BIT : 0;
 	rc = qti_haptics_masked_write(chip, addr, mask, val);
 	if (rc < 0)
+	{
 		dev_err(chip->dev, "set AUTO_RES_CTRL failed, rc=%d\n", rc);
+		return rc;
+	}
+
+	if (en){
+		chip->status_flags |= AUTO_RESONANCE_ENABLED;
+
+		if (is_sw_lra_auto_resonance_control(chip)) {
+			/*
+			 * Start timer to poll Auto Resonance error bit
+			 */
+			pr_debug("Cancel and retarting auto_res_err_poll_timer\n",__FUNCTION__,__LINE__);
+			hrtimer_cancel(&chip->auto_res_err_poll_timer);
+			hrtimer_start(&chip->auto_res_err_poll_timer,
+				ktime_set(0, POLL_TIME_AUTO_RES_ERR_NS),
+				 HRTIMER_MODE_REL);
+		}
+	}
+	else
+		chip->status_flags &= ~AUTO_RESONANCE_ENABLED;
 
 	return rc;
+}
+
+static int qpnp_haptics_update_rate_cfg(struct qti_hap_chip *chip, u16 play_rate)
+{
+	int rc;
+	u8 val[2];
+
+	if (chip->config.last_rate_cfg == play_rate) {
+		pr_debug("Same rate_cfg %x\n", play_rate);
+		return 0;
+	}
+
+	val[0] = play_rate & HAP_RATE_CFG1_MASK;
+	val[1] = (play_rate >> HAP_RATE_CFG2_SHFT) & HAP_RATE_CFG2_MASK;
+    rc = qti_haptics_write(chip, REG_HAP_RATE_CFG1, val, 2);
+	if (rc < 0)
+		return rc;
+
+	pr_debug("Play rate code 0x%x\n", play_rate);
+	chip->config.last_rate_cfg = play_rate;
+	return 0;
+}
+
+static void qpnp_haptics_update_lra_frequency(struct qti_hap_chip *chip)
+{
+	u8 lra_auto_res[2], val;
+	u32 play_rate_code;
+	u16 rate_cfg;
+	int rc;
+
+	rc = qti_haptics_read(chip, HAP_LRA_AUTO_RES_LO_REG, lra_auto_res, 2);
+	if (rc < 0) {
+		pr_err("Error in reading LRA_AUTO_RES_LO/HI, rc=%d\n", rc);
+		return;
+	}
+
+	play_rate_code =
+		 (lra_auto_res[1] & 0xF0) << 4 | (lra_auto_res[0] & 0xFF);
+
+	pr_debug("lra_auto_res_lo = 0x%x lra_auto_res_hi = 0x%x play_rate_code = 0x%x\n",
+		lra_auto_res[0], lra_auto_res[1], play_rate_code);
+
+	rc = qti_haptics_read(chip, REG_HAP_STATUS1, &val, 1);
+	if (rc < 0)
+		return;
+
+	/*
+	 * If the drive period code read from AUTO_RES_LO and AUTO_RES_HI
+	 * registers is more than the max limit percent variation or less
+	 * than the min limit percent variation specified through DT, then
+	 * auto-resonance is disabled.
+	 */
+
+	if ((val & AUTO_RES_ERR_BIT) ||
+		((play_rate_code <= chip->config.drive_period_code_min_limit) ||
+		(play_rate_code >= chip->config.drive_period_code_max_limit))) {
+		if (val & AUTO_RES_ERR_BIT)
+			pr_debug("Auto-resonance error %x\n", val);
+		else
+			pr_debug("play rate %x out of bounds [min: 0x%x, max: 0x%x]\n",
+				play_rate_code,
+				chip->config.drive_period_code_min_limit,
+				chip->config.drive_period_code_max_limit);
+		rc = qti_haptics_lra_auto_res_enable(chip, false);
+		if (rc < 0)
+			pr_debug("Auto-resonance disable failed\n");
+		return;
+	}
+
+	/*
+	 * bits[7:4] of AUTO_RES_HI should be written to bits[3:0] of RATE_CFG2
+	 */
+	lra_auto_res[1] >>= 4;
+	rate_cfg = lra_auto_res[1] << 8 | lra_auto_res[0];
+	rc = qpnp_haptics_update_rate_cfg(chip, rate_cfg);
+	if (rc < 0)
+		pr_debug("Error in updating rate_cfg\n");
 }
 
 #define HAP_CLEAR_PLAYING_RATE_US	15
@@ -687,6 +833,7 @@ static int qti_haptics_load_constant_waveform(struct qti_hap_chip *chip)
 	struct qti_hap_play_info *play = &chip->play;
 	struct qti_hap_config *config = &chip->config;
 	int rc = 0;
+	unsigned long flags;
 
 	rc = qti_haptics_config_play_rate_us(chip, config->play_rate_us);
 	if (rc < 0)
@@ -1043,6 +1190,12 @@ static int qti_haptics_playback(struct input_dev *dev, int effect_id, int val)
 	} else {
 		pr_debug("Vibration - off at %lu us\n",
 				(unsigned long)ktime_to_us(ktime_get()));
+
+		if (is_sw_lra_auto_resonance_control(chip)) {
+			pr_debug("Cancel auto_res_err_poll_timer\n",__FUNCTION__,__LINE__);
+			hrtimer_cancel(&chip->auto_res_err_poll_timer);
+		}
+
 		play->length_us = 0;
 		rc = qti_haptics_play(chip, false);
 		if (rc < 0)
@@ -1104,6 +1257,7 @@ static void qti_haptics_set_gain(struct input_dev *dev, u16 gain)
 		gain = 0x7fff;
 
 	play->vmax_mv = ((u32)(gain * config->vmax_mv)) / 0x7fff;
+	pr_debug("%s: play->vmax_mv=%u config->vmax_mv=%u gain=%u\n", __FUNCTION__, play->vmax_mv, config->vmax_mv, gain);
 	qti_haptics_config_vmax(chip, play->vmax_mv);
 }
 
@@ -1195,6 +1349,36 @@ static int qti_haptics_hw_init(struct qti_hap_chip *chip)
 			return rc;
 	}
 
+	config->init_drive_period_code =
+	     config->play_rate_us / HAP_RATE_CFG_STEP_US;
+	dev_dbg(chip->dev,
+	 "Play rate code 0x%x\n", config->init_drive_period_code);
+
+	val = config->init_drive_period_code & HAP_RATE_CFG1_MASK;
+	rc = qti_haptics_write(chip, REG_HAP_RATE_CFG1, &val, 1);
+	if (rc)
+	    return rc;
+
+	val = (config->init_drive_period_code & 0xF00) >> HAP_RATE_CFG2_SHFT;
+	rc = qti_haptics_write(chip, REG_HAP_RATE_CFG1, &val, 1);
+	    if (rc)
+		return rc;
+
+	if (is_sw_lra_auto_resonance_control(chip)) {
+		config->drive_period_code_max_limit =
+			(config->init_drive_period_code * (100 +
+			config->drive_period_code_max_limit_percent_variation))
+			/ 100;
+		config->drive_period_code_min_limit =
+			(config->init_drive_period_code * (100 -
+			config->drive_period_code_min_limit_percent_variation))
+			/ 100;
+		dev_dbg(chip->dev, "Drive period code max limit %x\n"
+		    "Drive period code min limit %x\n",
+		    config->drive_period_code_max_limit,
+		    config->drive_period_code_min_limit);
+	}
+
 	/*
 	 * Skip configurations below for ERM actuator
 	 * as they're only for LRA actuators
@@ -1247,6 +1431,11 @@ static enum hrtimer_restart qti_hap_stop_timer(struct hrtimer *timer)
 	struct qti_hap_chip *chip = container_of(timer, struct qti_hap_chip,
 			stop_timer);
 	int rc;
+
+	if (is_sw_lra_auto_resonance_control(chip)) {
+		pr_debug("Cancel auto_res_err_poll_timer\n",__FUNCTION__,__LINE__);
+		hrtimer_cancel(&chip->auto_res_err_poll_timer);
+	}
 
 	chip->play.length_us = 0;
 	rc = qti_haptics_play(chip, false);
@@ -1466,6 +1655,24 @@ static int qti_haptics_parse_dt(struct qti_hap_chip *chip)
 						HAP_AUTO_RES_ZXD_EOP;
 			}
 		}
+
+		config->correct_lra_drive_freq =
+			of_property_read_bool(node,
+				"qcom,correct-lra-drive-freq");
+
+		config->drive_period_code_max_limit_percent_variation = 25;
+		rc = of_property_read_u32(node,
+			"qcom,drive-period-code-max-limit-percent-variation", &tmp);
+		if (!rc)
+		    config->drive_period_code_max_limit_percent_variation =
+				(u8) tmp;
+
+		config->drive_period_code_min_limit_percent_variation = 25;
+		rc = of_property_read_u32(node,
+			"qcom,drive-period-code-min-limit-percent-variation", &tmp);
+		if (!rc)
+		    config->drive_period_code_min_limit_percent_variation =
+					(u8) tmp;
 	}
 
 	chip->constant.pattern = devm_kcalloc(chip->dev,
@@ -2029,6 +2236,21 @@ cleanup:
 }
 #endif
 
+static enum hrtimer_restart hap_auto_res_err_poll_timer(struct hrtimer *timer)
+{
+	struct qti_hap_chip *chip = container_of(timer, struct qti_hap_chip,
+					auto_res_err_poll_timer);
+
+	if (!(chip->status_flags & AUTO_RESONANCE_ENABLED))
+		return HRTIMER_NORESTART;
+
+	qpnp_haptics_update_lra_frequency(chip);
+	hrtimer_forward(&chip->auto_res_err_poll_timer, ktime_get(),
+			ktime_set(0, POLL_TIME_AUTO_RES_ERR_NS));
+
+	return HRTIMER_NORESTART;
+}
+
 static int qti_haptics_probe(struct platform_device *pdev)
 {
 	struct qti_hap_chip *chip;
@@ -2095,6 +2317,10 @@ static int qti_haptics_probe(struct platform_device *pdev)
 	hrtimer_init(&chip->hap_disable_timer, CLOCK_MONOTONIC,
 						HRTIMER_MODE_REL);
 	chip->hap_disable_timer.function = qti_hap_disable_timer;
+
+	hrtimer_init(&chip->auto_res_err_poll_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	chip->auto_res_err_poll_timer.function = hap_auto_res_err_poll_timer;
+
 	input_dev->name = "qti-haptics";
 	input_set_drvdata(input_dev, chip);
 	chip->input_dev = input_dev;
@@ -2147,6 +2373,8 @@ destroy_ff:
 static int qti_haptics_remove(struct platform_device *pdev)
 {
 	struct qti_hap_chip *chip = dev_get_drvdata(&pdev->dev);
+
+	hrtimer_cancel(&chip->auto_res_err_poll_timer);
 
 #ifdef CONFIG_DEBUG_FS
 	debugfs_remove_recursive(chip->hap_debugfs);
