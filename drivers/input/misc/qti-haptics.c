@@ -263,6 +263,7 @@ struct qti_hap_play_info {
 	int			length_us;
 	int			playing_pos;
 	bool			playing_pattern;
+	bool			lra_auto_res_enable;
 };
 
 struct qti_hap_config {
@@ -300,6 +301,7 @@ struct qti_hap_chip {
 	struct hrtimer			stop_timer;
 	struct hrtimer			hap_disable_timer;
 	struct hrtimer			auto_res_err_poll_timer;
+	struct hrtimer			lra_auto_enable_timer;
 	struct dentry			*hap_debugfs;
 	struct notifier_block		twm_nb;
 	spinlock_t			bus_lock;
@@ -858,13 +860,6 @@ static int qti_haptics_load_constant_waveform(struct qti_hap_chip *chip)
 		if (rc < 0)
 			return rc;
 
-		/* Enable Auto-Resonance when VMAX wf-src is selected */
-		if (config->act_type == ACT_LRA) {
-			rc = qti_haptics_lra_auto_res_enable(chip, true);
-			if (rc < 0)
-				return rc;
-		}
-
 		/* Set WF_SOURCE to VMAX */
 		rc = qti_haptics_config_wf_src(chip, INT_WF_VMAX);
 		if (rc < 0)
@@ -897,6 +892,12 @@ static int qti_haptics_load_constant_waveform(struct qti_hap_chip *chip)
 		play->playing_pattern = true;
 	}
 
+	/* Enable Auto-Resonance when on long playing waves selected */
+	if (config->act_type == ACT_LRA &&
+		play->length_us >= VMAX_MIN_PLAY_TIME_US) {
+		    play->lra_auto_res_enable = true;
+	}
+
 	return 0;
 }
 
@@ -921,10 +922,7 @@ static int qti_haptics_load_predefined_effect(struct qti_hap_chip *chip,
 		return rc;
 
 	if (config->act_type == ACT_LRA) {
-		rc = qti_haptics_lra_auto_res_enable(chip,
-				!play->effect->lra_auto_res_disable);
-		if (rc < 0)
-			return rc;
+		play->lra_auto_res_enable = !play->effect->lra_auto_res_disable;
 	}
 
 	/* Set brake pattern in the effect */
@@ -1180,6 +1178,19 @@ static int qti_haptics_playback(struct input_dev *dev, int effect_id, int val)
 		rc = qti_haptics_module_en(chip, true);
 		if (rc < 0)
 			return rc;
+		/*
+		* For auto resonance detection to work properly,
+		* sufficient back-emf has to be generated. In general,
+		* back-emf takes some time to build up. When the auto
+		* resonance mode is chosen as QWD, high-z will be
+		* applied for every LRA cycle and hence there won't be
+		* enough back-emf at the start-up. Hence, the motor
+		* needs to vibrate for few LRA cycles after the PLAY
+		* bit is asserted. So disable the auto resonance here
+		* and enable it after the sleep of
+		* VMAX_MIN_PLAY_TIME_US is completed.
+		*/
+		qti_haptics_lra_auto_res_enable(chip, false);
 
 		rc = qti_haptics_play(chip, true);
 		if (rc < 0)
@@ -1199,6 +1210,14 @@ static int qti_haptics_playback(struct input_dev *dev, int effect_id, int val)
 			nsecs = (play->length_us % USEC_PER_SEC) *
 				NSEC_PER_USEC;
 			hrtimer_start(&chip->stop_timer, ktime_set(secs, nsecs),
+					HRTIMER_MODE_REL);
+		}
+
+		if (play->length_us >= VMAX_MIN_PLAY_TIME_US &&
+			play->lra_auto_res_enable) {
+			    pr_debug("Enable auto res!\n");
+			    hrtimer_start(&chip->lra_auto_enable_timer,
+					ktime_set(0, VMAX_MIN_PLAY_TIME_US * NSEC_PER_USEC),
 					HRTIMER_MODE_REL);
 		}
 	} else {
@@ -2254,6 +2273,19 @@ cleanup:
 }
 #endif
 
+static enum hrtimer_restart hap_lra_auto_enable_timer(struct hrtimer *timer)
+{
+	struct qti_hap_chip *chip = container_of(timer, struct qti_hap_chip,
+					lra_auto_enable_timer);
+	int rc;
+	rc = qti_haptics_lra_auto_res_enable(chip, true);
+	if (rc < 0) {
+		pr_debug("Error while turning on auto res!\n");
+	}
+
+	return HRTIMER_NORESTART;
+}
+
 static enum hrtimer_restart hap_auto_res_err_poll_timer(struct hrtimer *timer)
 {
 	struct qti_hap_chip *chip = container_of(timer, struct qti_hap_chip,
@@ -2268,6 +2300,8 @@ static enum hrtimer_restart hap_auto_res_err_poll_timer(struct hrtimer *timer)
 
 	return HRTIMER_NORESTART;
 }
+
+
 
 static int qti_haptics_probe(struct platform_device *pdev)
 {
@@ -2338,6 +2372,9 @@ static int qti_haptics_probe(struct platform_device *pdev)
 
 	hrtimer_init(&chip->auto_res_err_poll_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
 	chip->auto_res_err_poll_timer.function = hap_auto_res_err_poll_timer;
+
+	hrtimer_init(&chip->lra_auto_enable_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	chip->lra_auto_enable_timer.function = hap_lra_auto_enable_timer;
 
 	input_dev->name = "qti-haptics";
 	input_set_drvdata(input_dev, chip);
