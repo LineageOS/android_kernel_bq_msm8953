@@ -500,6 +500,9 @@ static void construct_constant_waveform_in_pattern(
 	for (i = 0; i < effect->pattern_length; i++) {
 		magnitude = play->vmax_mv / HAP_VMAX_MV_LSB;
 		effect->pattern[i] = (u8)magnitude << HAP_WF_AMP_SHIFT;
+		if (chip->revid->pmic_subtype != PM660_SUBTYPE) {
+			effect->pattern[i] |= HAP_WF_OVD_BIT;
+		}
 	}
 }
 
