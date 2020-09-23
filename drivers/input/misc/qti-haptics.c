@@ -281,6 +281,7 @@ struct qti_hap_config {
 	u16			drive_period_code_max_limit;
 	u16			drive_period_code_min_limit;
 	bool		correct_lra_drive_freq;
+	bool		lra_disable_short_pattern;
 };
 
 struct qti_hap_chip {
@@ -847,7 +848,7 @@ static int qti_haptics_load_constant_waveform(struct qti_hap_chip *chip)
 	 * pattern length and repeating times to achieve accurate
 	 * playing time accuracy.
 	 */
-	if (play->length_us >= VMAX_MIN_PLAY_TIME_US) {
+	if (!config->lra_disable_short_pattern && play->length_us >= VMAX_MIN_PLAY_TIME_US) {
 		rc = qti_haptics_config_vmax(chip, play->vmax_mv);
 		if (rc < 0)
 			return rc;
@@ -1667,6 +1668,10 @@ static int qti_haptics_parse_dt(struct qti_hap_chip *chip)
 		config->correct_lra_drive_freq =
 			of_property_read_bool(node,
 				"qcom,correct-lra-drive-freq");
+
+		config->lra_disable_short_pattern =
+			of_property_read_bool(node,
+				"qcom,lra_disable_short_pattern");
 
 		config->drive_period_code_max_limit_percent_variation = 25;
 		rc = of_property_read_u32(node,

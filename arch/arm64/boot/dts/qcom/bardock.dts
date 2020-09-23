@@ -143,6 +143,7 @@
 		// qcom,external-waveform-source="pwm|audio"
 		qcom,lra-allow-variable-play-rate;
 		qcom,lra-auto-resonance-mode="none"; // "zxd|qwd" // stock: "none"
+		qcom,lra_disable_short_pattern;
 		vdd-supply = <&pon_perph_reg>;
                 wf_0 {
                     /* CLICK */
