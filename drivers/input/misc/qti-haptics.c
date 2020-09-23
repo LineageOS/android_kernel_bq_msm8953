@@ -215,6 +215,7 @@ enum hap_status {
 
 #define REG_HAP_SEC_ACCESS		0xD0
 #define REG_HAP_PERPH_RESET_CTL3	0xDA
+#define REG_HAP_TEST2			0xE3
 
 #define POLL_TIME_AUTO_RES_ERR_NS	(20 * NSEC_PER_MSEC)
 
@@ -691,7 +692,11 @@ static int qti_haptics_lra_auto_res_enable(struct qti_hap_chip *chip, bool en)
 	int rc=0;
 	u8 addr, val, mask;
 
-	addr = REG_HAP_AUTO_RES_CTRL;
+	if (chip->revid->pmic_subtype == PM660_SUBTYPE) {
+		addr = REG_HAP_AUTO_RES_CTRL;
+	} else {
+		addr = REG_HAP_TEST2;
+	}
 	mask = HAP_AUTO_RES_EN_BIT;
 	val = en ? HAP_AUTO_RES_EN_BIT : 0;
 	rc = qti_haptics_masked_write(chip, addr, mask, val);
