@@ -1,4 +1,4 @@
-/* Copyright (c) 2017-2018, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2017-2018,2020, The Linux Foundation. All rights reserved.
  * Copyright (c) 2022 Qualcomm Innovation Center, Inc. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
@@ -1024,6 +1024,7 @@
 /* GPUCC registers */
 #define A6XX_GPU_CC_GX_GDSCR                   0x24403
 #define A6XX_GPU_CC_GX_DOMAIN_MISC		0x24542
+#define A6XX_GPU_CC_CX_GDSCR                   0x2441B
 
 /* GPU RSC sequencer registers */
 #define	A6XX_RSCC_PDC_SEQ_START_ADDR			0x23408
