@@ -286,6 +286,7 @@ static struct kmem_cache *epi_cache __read_mostly;
 static struct kmem_cache *pwq_cache __read_mostly;
 
 
+
 /*
  * List of files with newly added links, where we may need to limit the number
  * of emanating paths. Protected by the epmutex.
@@ -1382,6 +1383,7 @@ static int ep_insert(struct eventpoll *ep, struct epoll_event *event,
 		goto error_unregister;
 
 
+
 	/* We have to drop the new item inside our item list to keep track of it */
 	spin_lock_irqsave(&ep->lock, flags);
 
@@ -1415,6 +1417,7 @@ error_remove_epi:
 	spin_unlock(&tfile->f_lock);
 
 	rb_erase(&epi->rbn, &ep->rbr);
+
 
 
 	/*
@@ -1787,7 +1790,10 @@ static int ep_loop_check(struct eventpoll *ep, struct file *file)
 {
 	return ep_call_nested(&poll_loop_ncalls, EP_MAX_NESTS,
 
+
+
 			      ep_loop_check_proc, file, ep, current);
+
 
 }
 
@@ -1983,6 +1989,7 @@ SYSCALL_DEFINE4(epoll_ctl, int, epfd, int, op, int, fd,
 			error = ep_insert(ep, &epds, tf.file, fd, full_check);
 		} else
 			error = -EEXIST;
+
 
 		break;
 	case EPOLL_CTL_DEL:
