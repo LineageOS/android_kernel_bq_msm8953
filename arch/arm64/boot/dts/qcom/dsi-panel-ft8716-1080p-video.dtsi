@@ -37,7 +37,6 @@
                 qcom,cont-splash-enabled;
                 qcom,ulps-enabled;
                 qcom,suspend-ulps-enabled;
-		qcom,panel-allow-phy-poweroff;
 		qcom,mdss-dsi-on-command = [
 			29 01 00 00 00 00 02 00 00
 			29 01 00 00 00 00 04 FF 87 16 01

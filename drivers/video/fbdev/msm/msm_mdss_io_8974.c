@@ -2243,7 +2243,7 @@ int mdss_dsi_pre_clkoff_cb(void *priv,
 		 * Enable DSI clamps only if entering idle power collapse or
 		 * when ULPS during suspend is enabled.
 		 */
-		if (true ||(ctrl->ctrl_state & CTRL_STATE_DSI_ACTIVE) ||
+		if ((ctrl->ctrl_state & CTRL_STATE_DSI_ACTIVE) ||
 			pdata->panel_info.ulps_suspend_enabled) {
 			mdss_dsi_phy_power_off(ctrl);
 			rc = mdss_dsi_clamp_ctrl(ctrl, 1);
