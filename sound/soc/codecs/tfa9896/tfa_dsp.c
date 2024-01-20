@@ -3759,7 +3759,7 @@ int tfa_cf_enabled(Tfa98xx_handle_t handle)
 	return value;
 }
 
-enum Tfa98xx_Error tfa98xx_set_boost_trip_level()
+enum Tfa98xx_Error tfa98xx_set_boost_trip_level(void)
 {
 	enum Tfa98xx_Error error = Tfa98xx_Error_Ok;
 	int dev, devcount = tfa98xx_cnt_max_device();
